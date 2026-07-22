@@ -433,55 +433,29 @@ function genRoadmap(O){
 }
 const ARENA_N={career:"Career",fitness:"Fitness",health:"Health",money:"Money",business:"Business",hobby:"Hobby",study:"Study"};
 
-/* ═════════ AI GENERATION (bring-your-own free key) ═════════
-   Uses Google Gemini. The key stays on this device and is sent only to Google.
-   Falls back to the smart generator on any failure, so the app never breaks. */
+/* ═════════ AI GENERATION (secure edge-function proxy) ═════════
+   Calls the Supabase Edge Function "ai-plan", which holds the OpenRouter key
+   as a server secret. Users never need a key. Falls back to the smart
+   generator on any failure or when offline, so the app never breaks. */
 async function genRoadmapAI(O){
-  const key=aiKey();
-  if(!key) return genRoadmap(O);
   const base=genRoadmap(O);                 // structural skeleton — dates, win lines, scoring
-  const arenaList=O.arenas.map(a=>ARENA_N[a]).join(", ");
-  const facts=[
-    O.cert&&O.cert!=="none"?("Certification goal: "+(CERTS[O.cert]||O.certName||O.cert)):"",
-    O.jobSwitch?"Wants a job switch this season":"",
-    O.fitLevel?("Fitness now: "+O.fitLevel+", goal: "+(O.fitGoal||"5k")+", "+(O.fitDays||3)+" run days/week"):"",
-    O.weight?("Body goal: "+O.weight):"",
-    O.savings?("Monthly savings target: ₹"+O.savings):"",
-    O.bizType?("Business: "+O.bizType+" ("+(O.bizStage||"")+")"):"",
-    O.hobbyName?("Hobby: "+O.hobbyName):"",
-    O.studyWhat?("Studying: "+O.studyWhat):"",
-    "Time available: "+(O.hours||"mid")
-  ].filter(Boolean).join(". ");
-  const prompt=`You are a world-class personal coach. Design a personalized 12-week growth season for someone leveling up in these areas: ${arenaList}.
-Their context: ${facts}.
-Return ONLY strict minified JSON, no markdown, with this exact shape:
-{"weeks":[{"n":1,"tasks":[{"area":"career","t":"..."}]}...12 weeks...],"daily":["directive 1","directive 2","directive 3","directive 4"],"dailyFocus":"one sentence on the daily habit theme"}
-Rules: area must be one of ${O.arenas.map(a=>'"'+a+'"').join(",")}. Exactly 2 tasks per area per week (so ${O.arenas.length*2} tasks each week). Tasks must be concrete, measurable, escalating week to week toward the goals, and doable in a week. "daily" = 3-5 short daily directives that together drive overall growth (mind, body, focus). Keep every string under 90 characters. Output must be valid JSON only.`;
+  if(!sb||!session) return base;            // no backend / not signed in → smart plan
   try{
-    const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),30000);
-    const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key="+encodeURIComponent(key),{
-      method:"POST",headers:{"Content-Type":"application/json"},signal:ctrl.signal,
-      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.7,maxOutputTokens:4096,responseMimeType:"application/json"}})
-    });
-    clearTimeout(to);
-    if(!res.ok){ const e=await res.text(); throw new Error("Gemini "+res.status+": "+e.slice(0,120)); }
-    const j=await res.json();
-    const txt=j.candidates?.[0]?.content?.parts?.[0]?.text||"";
-    const ai=JSON.parse(txt.replace(/^```json\s*|\s*```$/g,""));
-    if(!ai.weeks||!Array.isArray(ai.weeks)) throw new Error("bad shape");
+    const {data,error}=await sb.functions.invoke("ai-plan",{body:{onboarding:O}});
+    if(error) throw new Error(error.message||"invoke error");
+    if(!data||!Array.isArray(data.weeks)) throw new Error(data&&data.error?data.error:"bad shape");
     // Merge AI task text into our dated/scored skeleton
     base.weeks.forEach((w,wi)=>{
-      const aw=ai.weeks[wi]; if(!aw||!aw.tasks) return;
+      const aw=data.weeks[wi]; if(!aw||!aw.tasks) return;
       const byArea={}; O.arenas.forEach(a=>byArea[a]=aw.tasks.filter(t=>t.area===a).map(t=>t.t).filter(Boolean));
-      w.tasks.forEach(t=>{ const pool=byArea[t.area]; if(pool&&pool.length){ const v=pool.shift(); if(v) t.t=v.slice(0,120); } });
+      w.tasks.forEach(t=>{ const pool=byArea[t.area]; if(pool&&pool.length){ const v=pool.shift(); if(v) t.t=String(v).slice(0,120); } });
     });
-    if(Array.isArray(ai.daily)&&ai.daily.length){
-      base.habits=ai.daily.slice(0,6).map((t,i)=>({id:"h"+(i+1),t:String(t).slice(0,60),s:"AI daily goal",days:[0,1,2,3,4,5,6],stat:i%2?"Fitness":"Career"}));
-      // keep meal directives if health chosen
+    if(Array.isArray(data.daily)&&data.daily.length){
+      base.habits=data.daily.slice(0,6).map((t,i)=>({id:"h"+(i+1),t:String(t).slice(0,60),s:"AI daily goal",days:[0,1,2,3,4,5,6],stat:i%2?"Fitness":"Career"}));
       if(O.arenas.includes("health")){ base.habits.push({id:"hh1",t:"Breakfast on plan",s:"see fuel",days:[0,1,2,3,4,5,6],stat:"Health"}); base.habits.push({id:"hh2",t:"Lunch on plan",s:"fiber first",days:[0,1,2,3,4,5,6],stat:"Health"}); base.habits=base.habits.slice(0,6);}
     }
-    base.dailyFocus=ai.dailyFocus||"";
-    base.byAI=true;
+    base.dailyFocus=data.dailyFocus||"";
+    base.byAI=true; base.aiModel=data.model||"";
     return base;
   }catch(e){
     console.warn("AI generation failed, using smart plan:",e.message);
@@ -806,11 +780,11 @@ async function signOut(){if(sb&&session){await sb.auth.signOut();}localStorage.r
 
 /* ═════════ WIZARD ═════════ */
 const W={step:0,O:{arenas:[],purchases:[{name:"",price:""},{name:"",price:""},{name:"",price:""}],treats:["",""]}};
-const WSTEPS=["arenas","trend","career","fitness","health","money","business","hobby","study","buys","time","ai"];
+const WSTEPS=["arenas","trend","career","fitness","health","money","business","hobby","study","buys","time"];
 function activeSteps(){
   const a=W.O.arenas;
   return WSTEPS.filter(s=>{
-    if(["arenas","trend","buys","time","ai"].includes(s))return true;
+    if(["arenas","trend","buys","time"].includes(s))return true;
     return a.includes(s);
   });
 }
@@ -862,10 +836,6 @@ function drawWiz(){
       <div class="chp ${O.hours==="light"?"on":""}" data-h="light">~4 hrs/week · gentle</div>
       <div class="chp ${O.hours==="mid"||!O.hours?"on":""}" data-h="mid">~7 hrs/week · solid</div>
       <div class="chp ${O.hours==="high"?"on":""}" data-h="high">10+ hrs/week · aggressive</div></div>`;
-  if(cur==="ai")b.innerHTML=`<h2>Let AI design it?</h2>
-    <div class="p">Optional. Paste a free Google Gemini key and an AI coach writes your quests, daily goals and timeline — tuned to everything you just told me. Skip it and a smart built-in planner does the job instantly. Either way you can change it later.</div>
-    <div class="field"><label>Gemini API key (optional)</label><input id="w_ai" type="password" placeholder="AIza…" value="${aiKey()}"></div>
-    <div class="note">🔒 Stored only on this device, sent only to Google — never to us. Get a free key in 2 minutes at <b>aistudio.google.com/apikey</b> (free tier, no card).</div>`;
   bindWiz(cur);
   window.scrollTo({top:0});
 }
@@ -902,7 +872,6 @@ function captureWiz(){
   document.querySelectorAll("[data-bn]").forEach(e=>O.purchases[e.dataset.bn].name=e.value.trim());
   document.querySelectorAll("[data-bp]").forEach(e=>O.purchases[e.dataset.bp].price=Number(e.value.replace(/[^0-9]/g,"")));
   if(g("w_t0")!==undefined)O.treats=[g("w_t0"),g("w_t1")];
-  if(g("w_ai")!==undefined)setAiKey(g("w_ai"));
 }
 async function wizNext(){
   captureWiz();
@@ -912,11 +881,11 @@ async function wizNext(){
   if(!W.O.hours)W.O.hours="mid";
   S.onboarding=W.O;
   const btn=document.getElementById("wnext");
-  if(aiKey()){
+  if(session){
     btn.disabled=true;btn.textContent="Designing your season with AI…";
     S.roadmap=await genRoadmapAI(W.O);
     btn.disabled=false;
-    toast(S.roadmap.byAI?"AI built your personalized season ✨":"AI was busy — used the smart plan. You can regenerate anytime.");
+    toast(S.roadmap.byAI?"AI built your personalized season ✨":"AI was busy — used the smart plan. Regenerate anytime.");
   } else {
     S.roadmap=genRoadmap(W.O);
     toast("Season built. Week 1 starts Monday — warm-up counts now.");
