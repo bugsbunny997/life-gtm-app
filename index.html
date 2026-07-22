@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Life GTM">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Life GTM — your life, one game</title>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
+<style>
+:root{
+  --bg:#f5f5f7; --card:#ffffff; --sep:rgba(0,0,0,.08);
+  --tx:#1d1d1f; --tx2:#6e6e73; --tx3:#aeaeb2;
+  --blue:#0071e3; --green:#30b352; --orange:#ff9500; --red:#ff3b30; --track:#e8e8ed;
+  --shadow:0 1px 3px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#000; --card:#1c1c1e; --sep:rgba(255,255,255,.1); --tx:#f5f5f7; --tx2:#98989f; --tx3:#5c5c61;
+    --blue:#0a84ff; --green:#30d158; --orange:#ff9f0a; --red:#ff453a; --track:#2c2c2e; --shadow:none; }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{-webkit-text-size-adjust:100%;}
+body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:100svh;padding-bottom:96px;overscroll-behavior-y:contain;font-size:16px;line-height:1.4;}
+button{font-family:inherit;}
+input,textarea,select{font-family:inherit;font-size:16px;color:var(--tx);}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px;}
+header{padding:14px 0 2px;display:flex;align-items:center;justify-content:space-between;}
+.brand{font-size:15px;font-weight:600;}
+.hstats{display:flex;gap:8px;align-items:center;}
+.chip{display:flex;align-items:center;gap:5px;background:var(--card);border-radius:100px;padding:6px 12px;font-size:13px;font-weight:600;box-shadow:var(--shadow);}
+.chip .cl{color:var(--tx2);font-weight:500;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--tx3);}
+.dot.on{background:var(--green);}
+h1{font-size:30px;font-weight:700;letter-spacing:-.022em;margin:14px 0 2px;}
+.sub{font-size:14px;color:var(--tx2);margin-bottom:16px;}
+.card{background:var(--card);border-radius:18px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px;}
+.cardtitle{font-size:13px;font-weight:600;color:var(--tx2);margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline;}
+.cardtitle .r{font-weight:500;font-size:12px;color:var(--tx3);}
+.sect{font-size:20px;font-weight:700;letter-spacing:-.02em;margin:24px 2px 12px;}
+.ringwrap{display:flex;align-items:center;gap:20px;}
+.ringbox{position:relative;width:132px;height:132px;flex:0 0 132px;}
+.ringbox canvas{width:100%;height:100%;}
+.ringcenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ringcenter .n{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1;}
+.ringcenter .l{font-size:11px;color:var(--tx2);margin-top:3px;}
+.ringinfo{flex:1;}
+.ringinfo .big{font-size:16px;font-weight:600;margin-bottom:4px;}
+.ringinfo .d{font-size:13px;color:var(--tx2);line-height:1.5;}
+.wonpill{display:none;margin-top:9px;background:var(--green);color:#fff;font-size:12px;font-weight:700;border-radius:100px;padding:5px 12px;width:max-content;}
+.wonpill.on{display:block;}
+.row{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--sep);min-height:56px;}
+.row:last-child{border-bottom:none;}
+.ck{width:28px;height:28px;flex:0 0 28px;border-radius:50%;border:1.5px solid var(--tx3);cursor:pointer;display:flex;align-items:center;justify-content:center;background:transparent;transition:all .18s;}
+.ck svg{width:14px;height:14px;stroke:#fff;stroke-width:3;fill:none;opacity:0;transform:scale(.5);transition:all .18s;}
+.row.done .ck{background:var(--green);border-color:var(--green);}
+.row.done .ck svg{opacity:1;transform:scale(1);}
+.row .m{flex:1;min-width:0;cursor:pointer;}
+.row .t{font-size:15px;letter-spacing:-.01em;}
+.row.done .t{color:var(--tx3);}
+.row.skipped .t{color:var(--tx3);text-decoration:line-through;}
+.row .s{font-size:12px;color:var(--tx2);margin-top:2px;}
+.row .v{font-size:13px;font-weight:600;color:var(--tx2);white-space:nowrap;}
+.row.done .v{color:var(--green);}
+.row.rest{opacity:.4;pointer-events:none;}
+.skipbtn{background:none;border:none;color:var(--tx3);font-size:12px;font-weight:500;cursor:pointer;padding:8px 0 8px 8px;}
+.row.skipped .skipbtn{color:var(--orange);}
+.seg{display:flex;background:var(--track);border-radius:10px;padding:2px;margin-bottom:16px;overflow-x:auto;}
+.seg button{flex:1;min-width:52px;border:none;background:none;padding:8px 0;font-size:13px;font-weight:600;color:var(--tx2);border-radius:8px;cursor:pointer;}
+.seg button.on{background:var(--card);color:var(--tx);box-shadow:0 1px 4px rgba(0,0,0,.12);}
+.seg button .w{display:block;font-size:10px;font-weight:500;color:var(--green);height:12px;}
+.mile{padding:16px 0;border-bottom:1px solid var(--sep);}
+.mile:last-child{border-bottom:none;}
+.mile .top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;}
+.mile .n{font-size:15px;font-weight:600;}
+.mile .pct{font-size:13px;font-weight:600;color:var(--tx2);white-space:nowrap;}
+.mile .d{font-size:13px;color:var(--tx2);line-height:1.5;margin-bottom:10px;}
+.mbar{height:6px;background:var(--track);border-radius:3px;overflow:hidden;}
+.mbar i{display:block;height:100%;width:0%;background:var(--blue);border-radius:3px;transition:width .5s;}
+.mile.done .mbar i{background:var(--green);}
+.mbtn{width:100%;margin-top:12px;padding:12px;border-radius:12px;border:none;cursor:pointer;background:var(--track);color:var(--tx);font-size:14px;font-weight:600;}
+.mbtn.rdy{background:var(--blue);color:#fff;}
+.mile.done .mbtn{background:transparent;color:var(--green);border:1.5px solid var(--green);}
+.ladrow{display:flex;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--sep);cursor:pointer;}
+.ladrow:last-child{border-bottom:none;}
+.ladrow .ldot{width:10px;height:10px;flex:0 0 10px;border-radius:50%;background:var(--track);}
+.ladrow.got .ldot{background:var(--green);}
+.ladrow .m{flex:1;}
+.ladrow .t{font-size:14px;font-weight:600;}
+.ladrow.got .t{color:var(--tx3);}
+.ladrow .s{font-size:12px;color:var(--tx2);margin-top:1px;}
+.ladrow .w{font-size:12px;font-weight:600;color:var(--tx2);white-space:nowrap;}
+.balance{font-size:44px;font-weight:700;letter-spacing:-.03em;}
+.balance small{font-size:15px;font-weight:600;color:var(--tx2);margin-left:6px;}
+.itemrow{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--sep);}
+.itemrow:last-child{border-bottom:none;}
+.itemrow .m{flex:1;}
+.itemrow .t{font-size:15px;font-weight:500;}
+.itemrow .s{font-size:12px;color:var(--tx2);margin-top:2px;}
+.pbtn{min-width:74px;padding:8px 14px;border-radius:100px;border:none;cursor:pointer;background:var(--track);color:var(--blue);font-size:13px;font-weight:700;white-space:nowrap;}
+.pbtn.can{background:var(--blue);color:#fff;}
+.pbtn:disabled{color:var(--tx3);}
+.attr{display:flex;align-items:center;gap:12px;padding:9px 0;}
+.attr .k{font-size:13px;font-weight:500;width:76px;color:var(--tx2);}
+.attr .bar{flex:1;height:6px;background:var(--track);border-radius:3px;overflow:hidden;}
+.attr .bar i{display:block;height:100%;background:var(--blue);border-radius:3px;}
+.attr .v{font-size:13px;font-weight:600;width:28px;text-align:right;color:var(--tx2);}
+.ghost{width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;margin-top:10px;background:var(--track);color:var(--tx);font-size:14px;font-weight:600;}
+.ghost.danger{color:var(--red);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.note{font-size:12.5px;color:var(--tx2);line-height:1.55;}
+.empty{padding:26px 10px;text-align:center;color:var(--tx2);font-size:14px;line-height:1.6;}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:50;background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--sep);display:flex;justify-content:space-around;padding:6px 4px calc(8px + env(safe-area-inset-bottom));}
+nav button{background:none;border:none;cursor:pointer;color:var(--tx3);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:5px 6px;min-width:52px;}
+nav button svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+nav button.on{color:var(--blue);}
+.screen{display:none;}
+.screen.on{display:block;animation:fadein .22s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+@media (prefers-reduced-motion: reduce){.screen.on{animation:none;}*{transition-duration:0s !important;}}
+#toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);z-index:70;background:var(--tx);color:var(--bg);padding:11px 18px;border-radius:100px;font-size:13px;font-weight:500;max-width:86%;text-align:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+#cfx{position:fixed;inset:0;pointer-events:none;z-index:80;}
+/* ── wizard / auth ── */
+.full{position:fixed;inset:0;z-index:90;background:var(--bg);overflow-y:auto;display:none;padding:24px 0 40px;}
+.full.on{display:block;}
+.fwrap{max-width:520px;margin:0 auto;padding:0 20px;}
+.fwrap h2{font-size:26px;font-weight:700;letter-spacing:-.02em;margin:18px 0 6px;}
+.fwrap .p{font-size:14px;color:var(--tx2);line-height:1.6;margin-bottom:16px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid var(--sep);background:var(--card);outline:none;}
+.field input:focus{border-color:var(--blue);}
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chp{padding:9px 14px;border-radius:100px;border:1.5px solid var(--sep);background:var(--card);font-size:13.5px;font-weight:500;cursor:pointer;user-select:none;}
+.chp.on{border-color:var(--blue);color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,var(--card));font-weight:600;}
+.chp .tr{font-size:10px;color:var(--orange);font-weight:700;margin-left:5px;}
+.cta{width:100%;padding:15px;border:none;border-radius:14px;background:var(--blue);color:#fff;font-size:16px;font-weight:600;cursor:pointer;margin-top:16px;}
+.cta:disabled{opacity:.4;}
+.linkbtn{width:100%;background:none;border:none;color:var(--blue);font-size:14px;font-weight:500;padding:14px;cursor:pointer;}
+.steps{display:flex;gap:5px;margin-top:20px;}
+.steps i{flex:1;height:3px;border-radius:2px;background:var(--track);}
+.steps i.on{background:var(--blue);}
+.buyrow{display:flex;gap:8px;margin-bottom:8px;}
+.buyrow input:first-child{flex:2;}
+.buyrow input:last-child{flex:1;}
+.xbtn{border:none;background:var(--track);color:var(--tx2);border-radius:10px;width:44px;cursor:pointer;font-size:16px;}
+/* ── friends ── */
+.mycode{font-size:34px;font-weight:800;letter-spacing:.06em;text-align:center;padding:8px 0 2px;}
+.codehint{text-align:center;font-size:12px;color:var(--tx2);margin-bottom:10px;}
+.frow{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--sep);}
+.frow:last-child{border-bottom:none;}
+.avvy{width:42px;height:42px;flex:0 0 42px;border-radius:50%;background:var(--track);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--tx2);}
+.frow .m{flex:1;min-width:0;}
+.frow .t{font-size:15px;font-weight:600;}
+.frow .s{font-size:12px;color:var(--tx2);margin-top:1px;}
+.giftbtn{padding:8px 14px;border-radius:100px;border:1.5px solid var(--blue);background:none;color:var(--blue);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.sheet{position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;}
+.sheet.on{display:flex;}
+.sheetbox{background:var(--card);border-radius:22px 22px 0 0;padding:22px 20px calc(24px + env(safe-area-inset-bottom));width:100%;max-width:560px;animation:up .25s ease;}
+@keyframes up{from{transform:translateY(40px);opacity:0;}to{transform:none;opacity:1;}}
+.sheetbox h3{font-size:18px;font-weight:700;margin-bottom:4px;}
+.gia{display:flex;gap:8px;margin:14px 0;}
+.gia button{flex:1;padding:12px 0;border-radius:12px;border:1.5px solid var(--sep);background:var(--card);font-size:15px;font-weight:700;cursor:pointer;color:var(--tx);}
+.gia button.on{border-color:var(--blue);color:var(--blue);}
+.giftfeed .t b{color:var(--green);}
+#lvlup{position:fixed;inset:0;z-index:95;display:none;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bg) 60%,transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);}
+#lvlup.on{display:flex;}
+#lvlup .box{background:var(--card);border-radius:24px;padding:34px 40px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.25);}
+#lvlup .a{font-size:13px;font-weight:600;color:var(--tx2);}
+#lvlup .b{font-size:56px;font-weight:800;letter-spacing:-.04em;margin:4px 0;color:var(--blue);}
+#lvlup .c{font-size:15px;font-weight:600;}
+#lvlup .d{font-size:12px;color:var(--tx3);margin-top:14px;}
+</style>
+</head>
+<body>
+<canvas id="cfx"></canvas>
+<div id="toast"></div>
+<div id="lvlup" onclick="this.classList.remove('on')"><div class="box"><div class="a">LEVEL UP</div><div class="b" id="lvnum">2</div><div class="c" id="lvtitle"></div><div class="d">Tap to continue</div></div></div>
+
+<!-- ═══ START / AUTH ═══ -->
+<div class="full on" id="f-start">
+  <div class="fwrap" style="padding-top:12vh;">
+    <h2 style="font-size:34px;">Life GTM</h2>
+    <div class="p">Your goals — career, fitness, money, business, hobbies — turned into one game. Weekly quests, a ring to close, milestones that fill from real action, and friends who back you with XP.</div>
+    <button class="cta" onclick="startNew()">Start my game</button>
+    <button class="linkbtn" id="signinlink" onclick="showAuth()">I already have an account</button>
+    <div class="note" id="offlinenote" style="text-align:center;margin-top:8px;"></div>
+  </div>
+</div>
+
+<div class="full" id="f-auth">
+  <div class="fwrap" style="padding-top:10vh;">
+    <h2>Sign in</h2>
+    <div class="p">We email you a 6-digit code. No passwords, nothing to remember.</div>
+    <div class="field" id="emailfield"><label>Email</label><input id="email" type="email" inputmode="email" placeholder="you@example.com"></div>
+    <div class="field" id="otpfield" style="display:none;"><label>Code from your email</label><input id="otp" inputmode="numeric" maxlength="6" placeholder="123456"></div>
+    <button class="cta" id="authbtn" onclick="authNext()">Send code</button>
+    <button class="linkbtn" onclick="show('f-start')">Back</button>
+  </div>
+</div>
+
+<div class="full" id="f-handle">
+  <div class="fwrap" style="padding-top:10vh;">
+    <h2>Create your player</h2>
+    <div class="field"><label>Display name</label><input id="dname" maxlength="40" placeholder="Akshay"></div>
+    <div class="field"><label>Handle (a–z, 0–9, _ )</label><input id="dhandle" maxlength="20" placeholder="akshay_b"></div>
+    <div class="note">You'll get a unique friend code like <b>GTM-7K2X</b> — share it so friends can find you.</div>
+    <button class="cta" onclick="createProfile()">Continue</button>
+  </div>
+</div>
+
+<!-- ═══ WIZARD ═══ -->
+<div class="full" id="f-wiz">
+  <div class="fwrap">
+    <div class="steps" id="wsteps"></div>
+    <div id="wbody"></div>
+    <button class="cta" id="wnext" onclick="wizNext()">Continue</button>
+    <button class="linkbtn" id="wback" onclick="wizBack()">Back</button>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div class="wrap" id="app" style="display:none;">
+  <header>
+    <div class="brand">Life GTM</div>
+    <div class="hstats">
+      <div class="dot" id="syncdot" title="sync"></div>
+      <div class="chip"><span class="cl">Lv</span><span id="hlvl">1</span></div>
+      <div class="chip"><span id="hpts">0</span><span class="cl">pts</span></div>
+    </div>
+  </header>
+
+  <div class="screen on" id="s-today">
+    <h1 id="greet">Today</h1>
+    <div class="sub" id="datesub"></div>
+    <div class="card">
+      <div class="ringwrap">
+        <div class="ringbox"><canvas id="ring"></canvas>
+          <div class="ringcenter"><div class="n" id="ringxp">0</div><div class="l" id="ringlbl"></div></div></div>
+        <div class="ringinfo"><div class="big" id="ringtitle"></div><div class="d" id="ringdesc"></div>
+          <div class="wonpill" id="wonpill">Week cleared ✓</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="cardtitle">Daily directives <span class="r" id="chainlbl"></span></div><div id="habitlist"></div></div>
+    <div class="card" id="fuelcard"><div class="cardtitle">Today's fuel</div><div id="fuel" style="font-size:14px;line-height:1.8;"></div></div>
+  </div>
+
+  <div class="screen" id="s-quests">
+    <h1>Quests</h1><div class="sub" id="qsub"></div>
+    <div class="seg" id="seg"></div>
+    <div id="questarea"></div>
+  </div>
+
+  <div class="screen" id="s-miles">
+    <h1>Milestones</h1><div class="sub">Progress fills from your real actions</div>
+    <div id="milecards"></div>
+    <div class="card"><div class="cardtitle">The ladder <span class="r">cash only, zero debt</span></div><div id="ladder"></div></div>
+  </div>
+
+  <div class="screen" id="s-friends">
+    <h1>Friends</h1><div class="sub">Back each other with points</div>
+    <div class="card">
+      <div class="cardtitle">Your friend code</div>
+      <div class="mycode" id="mycode">—</div>
+      <div class="codehint" id="codehint">Share it anywhere</div>
+      <button class="ghost" onclick="copyCode()">Copy code</button>
+    </div>
+    <div class="card" id="addcard">
+      <div class="cardtitle">Add a friend</div>
+      <div class="field" style="margin-bottom:8px;"><input id="addcode" placeholder="GTM-XXXX" style="text-transform:uppercase;"></div>
+      <button class="ghost" onclick="addFriend()">Follow</button>
+    </div>
+    <div class="card"><div class="cardtitle">Following</div><div id="flist"><div class="note">No one yet. Trade codes.</div></div></div>
+    <div class="card"><div class="cardtitle">Gifts received</div><div id="giftfeed" class="giftfeed"><div class="note">Points friends send you land here — and in your balance.</div></div></div>
+  </div>
+
+  <div class="screen" id="s-shop">
+    <h1>Rewards</h1><div class="sub">Earned, never borrowed</div>
+    <div class="card"><div class="cardtitle">Balance</div><div class="balance" id="balance">0<small>points</small></div></div>
+    <div class="card"><div class="cardtitle">Shop</div><div id="shoplist"></div></div>
+  </div>
+
+  <div class="screen" id="s-you">
+    <h1 id="youname">You</h1><div class="sub" id="youtitle"></div>
+    <div class="card"><div class="cardtitle">Attributes</div><div id="attrs"></div></div>
+    <div class="card"><div class="cardtitle">Season · weekly XP</div><div style="display:flex;gap:8px;align-items:flex-end;height:80px;padding-top:10px;" id="wchart"></div><div style="height:16px;"></div></div>
+    <div class="card"><div class="cardtitle">Journal</div><div id="journal"></div></div>
+    <div class="card">
+      <div class="cardtitle">Data & account</div>
+      <div class="grid2"><button class="ghost" style="margin-top:0" onclick="exportData()">Export save</button>
+      <button class="ghost" style="margin-top:0" onclick="document.getElementById('imp').click()">Import</button></div>
+      <input type="file" id="imp" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="ghost" id="sndbtn" onclick="toggleSound()"></button>
+      <button class="ghost" onclick="regen()">Regenerate my season</button>
+      <button class="ghost" id="authstate" onclick="signOut()"></button>
+      <button class="ghost danger" onclick="resetAll()">Erase everything</button>
+    </div>
+  </div>
+</div>
+
+<nav id="nav" style="display:none;">
+  <button data-s="today" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Today</button>
+  <button data-s="quests"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9"/></svg>Quests</button>
+  <button data-s="miles"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h13l-2.5 4L18 12H5"/></svg>Miles</button>
+  <button data-s="friends"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="17.5" cy="9" r="2.8"/><path d="M15.5 14.7c.6-.1 1.3-.2 2-.2 2.9 0 5 1.8 5 4.5"/></svg>Friends</button>
+  <button data-s="shop"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M9.5 10c0-1.1 1.1-2 2.5-2s2.5.9 2.5 2-1.1 2-2.5 2-2.5.9-2.5 2 1.1 2 2.5 2 2.5-.9 2.5-2"/></svg>Rewards</button>
+  <button data-s="you"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>You</button>
+</nav>
+
+<!-- gift sheet -->
+<div class="sheet" id="giftsheet" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="sheetbox">
+    <h3 id="giftto">Gift points</h3>
+    <div class="note">From your balance to theirs. Max 50 per gift, 100 per day.</div>
+    <div class="gia" id="giftamts"><button data-a="5">5</button><button data-a="10" class="on">10</button><button data-a="25">25</button><button data-a="50">50</button></div>
+    <div class="field"><input id="giftmsg" maxlength="140" placeholder="Say something — 'keep going', 'proud of you'…"></div>
+    <button class="cta" style="margin-top:4px;" onclick="sendGift()">Send</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ═════════ CONFIG / SUPABASE ═════════ */
+const CFG=window.GTM_CONFIG||{};
+let sb=null, session=null, online=false;
+function sbReady(){return !!(CFG.SUPABASE_URL&&CFG.SUPABASE_ANON_KEY&&window.supabase);}
+function initSB(){ if(sbReady()&&!sb){ sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY); } return !!sb; }
+
+/* ═════════ STATE ═════════ */
+const KEY="lifegtm_app_v1";
+let S=load();
+function fresh(){return {profile:null,onboarding:null,roadmap:null,tasks:{},skips:{},extraSkip:{},miles:{},habits:{},spent:0,purch:{},log:[],lvlSeen:1,sound:true,giftNet:0,seenGifts:0,follows:[]};}
+function load(){try{const r=localStorage.getItem(KEY);if(r)return Object.assign(fresh(),JSON.parse(r));}catch(e){}return fresh();}
+let syncT=null;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} if(session){clearTimeout(syncT);syncT=setTimeout(pushSync,2500);} }
+
+/* ═════════ GENERATOR ═════════ */
+const TRENDS=[
+ {id:"marathon",l:"Run a marathon",tr:1,arena:"fitness"},{id:"pmp",l:"PMP certification",tr:1,arena:"career"},
+ {id:"ai",l:"AI certification",tr:1,arena:"career"},{id:"tenk",l:"10k steps daily",tr:0,arena:"health"},
+ {id:"nosugar",l:"30 days no added sugar",tr:1,arena:"health"},{id:"sip",l:"Automate investing (SIP)",tr:1,arena:"money"},
+ {id:"nospend",l:"No-spend month",tr:0,arena:"money"},{id:"detox",l:"Phone-free Sundays",tr:1,arena:"health"},
+ {id:"consist",l:"90-day consistency run",tr:1,arena:"health"}];
+const MEALS={
+ veg:{b:["Veg poha with curd","Oats upma with chaas","2 moong dal chillas with curd","3 idlis with sambar","Sprouted moong bowl","Besan chilla + mint chutney","Curd + fruit + seeds bowl"],
+      l:["Sprouts salad, 2 phulkas, sabzi","Small rajma, big salad, curd","Paneer bhurji, 2 phulkas, salad","Small soya pulao with raita","Dal, small jeera rice, salad","Curd rice with vegetables","Chole (small), salad, buttermilk"]},
+ egg:{b:["Veg poha with curd","3-egg bhurji, multigrain toast","Oats upma with chaas","2 moong dal chillas with curd","Hung curd bowl, fruit, seeds","2 besan chillas or masala oats","3 idlis with sambar"],
+      l:["Sprouts salad, 2 phulkas, sabzi","Small rajma or chole, big salad, curd","Paneer bhurji, 2 phulkas, kachumber","Small soya pulao with raita","Dal, small jeera rice, salad","Curd rice with vegetables","2-egg curry, roti, salad"]},
+ nonveg:{b:["3-egg omelette, toast","Veg poha with curd","Oats + boiled eggs","Chilla + curd","Egg bhurji, multigrain toast","Idlis with sambar","Curd bowl, fruit, seeds"],
+      l:["Grilled chicken + big salad + roti","Egg curry, roti, salad","Chicken curry (small), rice (small), salad","Sprouts salad, 2 phulkas","Dal, rice (small), salad","Curd rice + vegetables","Fish/chicken (grilled) + vegetables"]}};
+const CERTS={pmp:"PMP",pspo:"PSPO / CSPO",aws:"AWS certification",data:"Data Analytics certification",ai:"AI / GenAI certification",upsc:"Exam prep",custom:"Your certification"};
+function nextMonday(){const d=new Date();const day=d.getDay();const add=day===1?0:(8-day)%7;d.setDate(d.getDate()+add);return d;}
+function fmtD(d){return d.toLocaleDateString("en-IN",{day:"numeric",month:"short"});}
+function genRoadmap(O){
+  const start=nextMonday(),weeks=[],NW=12;
+  const perArena=2, arenas=O.arenas.slice(0,5);
+  const winLine=O.hours==="light"?50:O.hours==="mid"?60:70;
+  const lib=questLib(O);
+  for(let n=1;n<=NW;n++){
+    const ws=new Date(start);ws.setDate(ws.getDate()+(n-1)*7);
+    const we=new Date(ws);we.setDate(we.getDate()+6);
+    const tasks=[];
+    arenas.forEach(a=>{
+      const qs=lib[a](n);
+      qs.slice(0,perArena).forEach((t,i)=>tasks.push({id:"w"+n+a.slice(0,2)+i,area:a,t}));
+    });
+    weeks.push({id:"W"+n,n,label:fmtD(ws)+" – "+fmtD(we),start:iso(ws),end:iso(we),winLine,days:7,tasks});
+  }
+  const miles=genMiles(O,start);
+  const habits=genHabits(O);
+  const ladder=genLadder(O,start);
+  const shop=genShop(O);
+  return {v:1,created:new Date().toISOString(),start:iso(start),weeks,miles,habits,ladder,shop,
+    areas:Object.fromEntries(arenas.map(a=>[a,{n:ARENA_N[a],stat:ARENA_N[a]}])),diet:O.diet||"egg"};
+}
+const ARENA_N={career:"Career",fitness:"Fitness",health:"Health",money:"Money",business:"Business",hobby:"Hobby",study:"Study"};
+function questLib(O){
+  const cert=CERTS[O.cert]||O.certName||"your certification";
+  const hobby=O.hobbyName||"your hobby";
+  const biz=O.bizType||"your business";
+  const runPlan=fitPlan(O.fitLevel,O.fitGoal,O.fitDays||3);
+  return {
+    career:n=>{
+      const base=[
+        [`Map the ${cert} syllabus and book the exam date`,`5 morning deep-work blocks on ${cert}`],
+        [`5 study blocks — core modules of ${cert}`,`First 50 practice questions, log the score`],
+        [`5 study blocks — next modules`,`100 practice questions, review every mistake`],
+        [`Timed half-mock — 60%+`,`Repair week — drill your weakest topic`],
+        [`5 study blocks — advanced topics`,`150 practice questions this week`],
+        [`Full mock under exam conditions — 70%+`,`Book/confirm the real exam sitting`],
+        [`Final revision sprint — notes + flashcards`,`SIT THE EXAM — walk in ready`],
+        [`Update resume with the new credential`,`Refresh LinkedIn — headline, skills, one post`],
+        [`List 20 target companies or roles`,`Apply to 10 well-matched openings`],
+        [`2 mock interviews (friend or recorded)`,`Apply to 10 more, follow up on week 9`],
+        [`Prep salary anchors — research 3 benchmarks`,`3 mock interviews — behavioral + case`],
+        [`Line up references and offer paperwork`,`Close the loop — negotiate from strength`]];
+      return base[Math.min(n-1,11)];
+    },
+    fitness:n=>runPlan[Math.min(n-1,11)],
+    health:n=>{
+      const b=[
+        ["Both meals on plan 4+ days","Weigh in once, write it down"],
+        ["Both meals on plan 5+ days","Zero fried snacks between meals"],
+        ["One fermented food every day","Walk after dinner 5+ nights"],
+        ["Both meals on plan 5+ days","One full phone-free evening"],
+        ["Cook 3 dinners-lite at home","Weigh in — trend, not day"],
+        ["No added sugar 4 days","Sleep 7.5h+ on 5 nights"],
+        ["Both meals on plan 6 days","10k steps on 4 days"],
+        ["Fermented daily + fiber first","Walk after dinner 6 nights"],
+        ["No added sugar full week","Weigh in — compare week 1"],
+        ["Meal prep Sunday — 3 lunches ready","Sleep 7.5h+ on 6 nights"],
+        ["Both meals on plan 6 days","10k steps on 5 days"],
+        ["Full clean week — meals, water, walks","Final weigh-in — log the 12-week change"]];
+      return b[Math.min(n-1,11)];
+    },
+    money:n=>{
+      const amt=O.savings?("₹"+Number(O.savings).toLocaleString("en-IN")):"your target";
+      const b=[
+        [`Automate ${amt} to savings on salary day`,"Write the Why page — what the money buys you"],
+        ["Track every expense for 7 days","Cancel or downgrade 1 subscription"],
+        ["No-spend week on non-essentials","15-minute Sunday money review"],
+        [`Verify ${amt} landed — untouched`,"List next month's known big expenses"],
+        ["Set up / review one SIP or RD","Track expenses 7 days — compare week 2"],
+        ["No-delivery week — cook or carry","Negotiate one recurring bill"],
+        [`Verify ${amt} landed — untouched`,"Mid-season money review — on pace?"],
+        ["Sell or return 3 unused things","No-spend week round 2"],
+        ["Review insurance / emergency fund","15-minute Sunday review"],
+        [`Verify ${amt} landed — untouched`,"Plan next season's savings rate"],
+        ["Zero impulse purchases this week","Prep December-style buffer fund"],
+        [`Season close — total saved vs plan`,"Write the money reflection"]];
+      return b[Math.min(n-1,11)];
+    },
+    business:n=>{
+      const b=[
+        [`Build the numbers sheet for ${biz} — 30 days back`,"Cost every product — find top 3 margins"],
+        ["Compute daily break-even, post it visibly","Push top-margin item — measure attach rate"],
+        ["Fix or cut the 2 worst-margin items","Ask 15 customers one growth question"],
+        ["Month P&L — above break-even?","Design next month's offer from answers"],
+        ["Get 15 new Google reviews","Optimize your listings (maps/delivery apps)"],
+        ["Launch the offer — track redemptions","One content post about the business"],
+        ["Review offer numbers — keep or kill","Document one SOP (open/close/prep)"],
+        ["Document 2 more SOPs","Train someone on the SOPs"],
+        ["Hands-off test — 2 days without you","Fix what broke in the test"],
+        ["Hands-off test — 4 days","Month P&L — 2nd profitable month?"],
+        ["Draft expansion scorecard (site/scale)","Price the expansion — capex from profits"],
+        ["Season close — full P&L + decision memo","Set next season's one big bet"]];
+      return b[Math.min(n-1,11)];
+    },
+    hobby:n=>{
+      const b=[
+        [`2 ${hobby} sessions this week`,"15 minutes of deliberate practice ×2"],
+        [`2 sessions — push intensity`,"Learn one new technique"],
+        [`2 sessions`,"Film yourself once — find one fix"],
+        [`3 sessions this week`,"Practice the fix ×2"],
+        [`2 sessions`,"Play/perform with someone better"],
+        [`2 sessions`,"15-minute drills ×2"],
+        [`3 sessions`,"Teach someone one thing you know"],
+        [`2 sessions`,"Compete or share your work once"],
+        [`2 sessions`,"Film again — compare week 3"],
+        [`3 sessions`,"One long session — 90 minutes"],
+        [`2 sessions`,"Drill your weakest skill ×2"],
+        [`Season close — best session yet`,"Write what improved in 12 weeks"]];
+      return b[Math.min(n-1,11)];
+    },
+    study:n=>{
+      const b=[
+        ["Map the full syllabus, set targets","5 study blocks this week"],
+        ["5 study blocks","50 practice problems"],
+        ["5 study blocks","First timed test — set the baseline"],
+        ["Repair week — weakest topics only","100 practice problems"],
+        ["5 study blocks","Timed test #2 — beat the baseline"],
+        ["5 study blocks","Flashcards — 30 minutes daily ×4"],
+        ["Full mock","Review every single mistake"],
+        ["5 study blocks","150 problems this week"],
+        ["Timed test #3","Repair the last weak topic"],
+        ["5 study blocks","Full mock #2 — target score"],
+        ["Light revision + rest properly","Logistics ready — admit card, route, sleep"],
+        ["FINAL — sit the exam","Debrief — what's next"]];
+      return b[Math.min(n-1,11)];
+    }
+  };
+}
+function fitPlan(level,goal,days){
+  const L={start:0,"5k":1,"10k":2,half:3}[level||"start"]||0;
+  const G={"5k":1,"10k":2,half:3,marathon:4}[goal||"5k"]||1;
+  const p=[];
+  for(let n=1;n<=12;n++){
+    const phase=Math.ceil(n/4);
+    let a,b;
+    if(L===0){
+      a=n<=2?`${days} run/walk sessions — 1 min on, 1 min off × 20`:n<=4?`${days} runs — 2 min on, 1 min off`:n<=6?`${days} runs with 5-min continuous blocks`:n<=8?`${days} runs — one continuous 3K this week`:`${days} runs — long run ${3+Math.floor((n-8)/2)}K`;
+      b=n===4?"First continuous 2K, no walking":n===8?"First continuous 3K":n===12?(G>=2?"5K non-stop — the gate":"5K non-stop under 40:00"):"Move 20+ minutes every day";
+    } else {
+      const base=L===1?5:L===2?8:12;
+      const long=Math.min(base+Math.ceil(n* (G>=4?1.4:G>=3?1:0.6)), G>=4?32:G>=3?21:12);
+      a=`${days} runs — weekly volume ~${Math.round(long*1.9)}K`;
+      b=n%4===0?`Long run ${long}K this weekend`:n%4===2?"One tempo run — comfortably hard 20 min":"Easy runs — conversational pace only";
+    }
+    p.push([a,b]);
+  }
+  return p;
+}
+function genMiles(O,start){
+  const m=[],month=i=>{const d=new Date(start);d.setDate(d.getDate()+i*28+27);return iso(d);};
+  const cert=CERTS[O.cert]||O.certName||"your certification";
+  let k=0;
+  const push=(area,n,d,mo)=>m.push({id:"m"+(++k),area,n,d,goal:300,due:month(mo)});
+  if(O.arenas.includes("career"))push("career",`Pass ${cert}`,"Study blocks and quests fill this. Only the real exam completes it.",1);
+  if(O.arenas.includes("fitness")){
+    const g={"5k":"5K non-stop","10k":"10K non-stop",half:"Half marathon 21.1K",marathon:"30K long run"}[O.fitGoal]||"5K non-stop";
+    push("fitness",g,"Every run counts toward this.",2);}
+  if(O.arenas.includes("money"))push("money",`₹${Number(O.savings||10000).toLocaleString("en-IN")} × 3 months saved`,"Automated, untouched, verified.",2);
+  if(O.arenas.includes("business"))push("business","One profitable month, proven","P&L or it didn't happen.",1);
+  if(O.arenas.includes("health"))push("health","4 clean weeks","Meals on plan 5+ days, four weeks total.",1);
+  if(O.arenas.includes("hobby"))push("hobby",`${(O.hobbyName||"Hobby")} — 20 sessions`,"Show up twenty times.",2);
+  if(O.arenas.includes("study"))push("study","Hit your mock target score","Timed, honest conditions.",2);
+  return m;
+}
+function genHabits(O){
+  const h=[];
+  if(O.arenas.includes("career")||O.arenas.includes("study"))h.push({id:"h1",t:"Morning deep-work block",s:"before the day starts · weekdays",days:[1,2,3,4,5],stat:"Career",mile:"m1",amt:5});
+  if(O.arenas.includes("fitness"))h.push({id:"h2",t:"Move 20+ minutes",s:"run, sport or walk",days:[0,1,2,3,4,5,6],stat:"Fitness",amt:5});
+  if(O.arenas.includes("health")){h.push({id:"h3",t:"Breakfast on plan",s:"see fuel below",days:[0,1,2,3,4,5,6],stat:"Health"});
+    h.push({id:"h4",t:"Lunch on plan",s:"fiber first, one fermented thing",days:[0,1,2,3,4,5,6],stat:"Health"});}
+  h.push({id:"h5",t:"3.5–4L water",s:"",days:[0,1,2,3,4,5,6],stat:"Health"});
+  h.push({id:"h6",t:O.fixedDinner?"Walk after dinner":"Evening walk",s:"10 minutes",days:[0,1,2,3,4,5,6],stat:"Health"});
+  return h.slice(0,6);
+}
+function genLadder(O,start){
+  const items=(O.purchases||[]).filter(p=>p.name&&p.price>0).sort((a,b)=>a.price-b.price);
+  const rate=Math.max(Number(O.savings)||10000,1000);
+  let cum=0;
+  return items.map((p,i)=>{
+    cum+=Number(p.price);
+    const months=Math.ceil(cum/rate);
+    const d=new Date(start);d.setMonth(d.getMonth()+months);
+    return {id:"lad"+i,t:`${p.name} · ₹${Number(p.price).toLocaleString("en-IN")}`,s:`Paid in full, cash — ~${months} month${months>1?"s":""} of saving`,w:d.toLocaleDateString("en-IN",{month:"short",year:"2-digit"})};
+  });
+}
+function genShop(O){
+  const s=[{id:"t1",n:"Cheat meal license",d:"One meal, anything, zero guilt",p:35,type:"treat"},
+   {id:"t2",n:"Movie / match night",d:"Guilt-free evening off",p:28,type:"treat"},
+   {id:"t3",n:"Lazy morning pass",d:"No alarm, no plan",p:18,type:"treat"},
+   {id:"t4",n:"The fancy coffee",d:"The one you always skip",p:12,type:"treat"},
+   {id:"sk",n:"Extra skip token",d:"One more excused quest this week",p:45,type:"token"}];
+  (O.treats||[]).forEach((t,i)=>{if(t)s.push({id:"ct"+i,n:t,d:"Your pick",p:30,type:"treat"});});
+  return s;
+}
+
+/* ═════════ ENGINE (roadmap-driven) ═════════ */
+const R=()=>S.roadmap;
+const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+const todayISO=()=>iso(new Date());
+let curW=null;
+function pickWeek(){const t=todayISO();for(const w of R().weeks)if(t<=w.end)return w.id;return R().weeks[R().weeks.length-1].id;}
+const wk=id=>R().weeks.find(w=>w.id===id);
+function gutOn(){return R().habits.some(h=>h.id==="h3");}
+function*weekDates(w){const d=new Date(w.start+"T12:00:00");for(let i=0;i<w.days;i++){yield iso(d);d.setDate(d.getDate()+1);}}
+function gutPts(wid){if(!gutOn())return 0;let n=0;for(const d of weekDates(wk(wid)))if(S.habits[d]&&S.habits[d].h3&&S.habits[d].h4)n++;return n;}
+function gutBonus(wid){return gutOn()&&gutPts(wid)>=5?10:0;}
+function questXP(wid){return wk(wid).tasks.reduce((a,t)=>a+(S.tasks[t.id]?10:0),0);}
+function weekXP(wid){return questXP(wid)+gutBonus(wid);}
+function weekPossible(wid){return wk(wid).tasks.length*10-wk(wid).tasks.filter(t=>S.skips[t.id]).length*10+(gutOn()?10:0);}
+function weekWon(wid){return weekXP(wid)>=wk(wid).winLine;}
+function weekOver(wid){return todayISO()>wk(wid).end;}
+function habitXPAll(){let x=0;for(const d in S.habits)x+=Object.values(S.habits[d]).filter(Boolean).length*2;return x;}
+function mileXP(){return Object.values(S.miles).filter(Boolean).length*50;}
+function totalXP(){return R().weeks.reduce((a,w)=>a+weekXP(w.id),0)+habitXPAll()+mileXP();}
+function ptsEarned(){let p=0;
+  for(const w of R().weeks){p+=w.tasks.filter(t=>S.tasks[t.id]).length*5;if(gutBonus(w.id))p+=10;if(weekWon(w.id))p+=15;}
+  for(const d in S.habits)p+=Object.values(S.habits[d]).filter(Boolean).length;
+  return p+Object.values(S.miles).filter(Boolean).length*50;}
+function pts(){return Math.max(ptsEarned()-S.spent+(S.giftNet||0),0);}
+function lvlOf(xp){let l=1,need=100,acc=0;while(xp>=acc+need){acc+=need;l++;need=100+(l-1)*30;}return{l,into:xp-acc,need};}
+const TITLES=[[1,"At the starting line"],[3,"Getting consistent"],[5,"Operator"],[8,"Compounding"],[12,"Momentum"],[16,"Builder"],[20,"Sovereign"]];
+function titleOf(l){let t=TITLES[0][1];for(const[m,n]of TITLES)if(l>=m)t=n;return t;}
+function statVal(st){let v=0;
+  for(const w of R().weeks)for(const t of w.tasks)if(S.tasks[t.id]&&R().areas[t.area]&&R().areas[t.area].stat===st)v+=2;
+  for(const d in S.habits)for(const h of R().habits)if(S.habits[d][h.id]&&h.stat===st)v+=1;
+  return v;}
+function mileProg(m){if(S.miles[m.id])return m.goal;let p=0;
+  for(const w of R().weeks)for(const t of w.tasks)if(S.tasks[t.id]&&t.area===m.area)p+=30;
+  for(const d in S.habits)for(const h of R().habits)if(S.habits[d][h.id]&&h.mile===m.id)p+=(h.amt||0);
+  return Math.min(p,m.goal-10);}
+function dayChain(){let s=0,d=new Date();
+  for(let i=0;i<500;i++){const k=iso(d);
+    const done=S.habits[k]?Object.values(S.habits[k]).filter(Boolean).length:0;
+    if(done>=3)s++;else if(i===0){}else break;d.setDate(d.getDate()-1);}return s;}
+
+/* ═════════ SYNC ═════════ */
+async function pushSync(){
+  if(!sb||!session)return;
+  setDot(false);
+  try{
+    const L=lvlOf(totalXP());
+    await sb.from("saves").upsert({id:session.user.id,onboarding:S.onboarding,roadmap:S.roadmap,state:{tasks:S.tasks,skips:S.skips,extraSkip:S.extraSkip,miles:S.miles,habits:S.habits,spent:S.spent,purch:S.purch,log:S.log,seenGifts:S.seenGifts,follows:S.follows}});
+    await sb.from("profiles").update({xp:totalXP(),pts:pts(),level:L.l,week_xp:curW?weekXP(curW):0,chain:dayChain(),season_week:curW?wk(curW).n:1}).eq("id",session.user.id);
+    setDot(true);
+  }catch(e){setDot(false);}
+}
+async function pullSync(){
+  if(!sb||!session)return false;
+  try{
+    const {data}=await sb.from("saves").select("*").eq("id",session.user.id).maybeSingle();
+    if(data&&data.roadmap){
+      S.onboarding=data.onboarding;S.roadmap=data.roadmap;
+      Object.assign(S,data.state||{});
+      const {data:p}=await sb.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
+      if(p)S.profile={id:p.id,handle:p.handle,name:p.display_name,code:p.friend_code};
+      await refreshGiftNet();save();return true;
+    }
+    const {data:p}=await sb.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
+    if(p)S.profile={id:p.id,handle:p.handle,name:p.display_name,code:p.friend_code};
+  }catch(e){}
+  return !!(S.roadmap);
+}
+async function refreshGiftNet(){
+  if(!sb||!session)return;
+  try{const {data}=await sb.rpc("gift_totals");
+    if(data)S.giftNet=(data.received||0)-(data.sent||0);}catch(e){}
+}
+function setDot(ok){const d=document.getElementById("syncdot");d.classList.toggle("on",!!ok);}
+
+/* ═════════ AUTH FLOW ═════════ */
+let authStage=0,authEmail="";
+function show(id){document.querySelectorAll(".full").forEach(f=>f.classList.remove("on"));if(id)document.getElementById(id).classList.add("on");}
+function showAuth(){if(!initSB()){toast("Multiplayer backend not configured yet — starting solo.");startNew();return;}authStage=0;document.getElementById("otpfield").style.display="none";document.getElementById("authbtn").textContent="Send code";show("f-auth");}
+async function authNext(){
+  const btn=document.getElementById("authbtn");
+  if(authStage===0){
+    authEmail=document.getElementById("email").value.trim();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(authEmail)){toast("That email doesn't look right.");return;}
+    btn.disabled=true;btn.textContent="Sending…";
+    const {error}=await sb.auth.signInWithOtp({email:authEmail,options:{shouldCreateUser:true}});
+    btn.disabled=false;
+    if(error){toast(error.message);btn.textContent="Send code";return;}
+    authStage=1;document.getElementById("otpfield").style.display="block";btn.textContent="Verify";toast("Code sent — check your email.");
+  } else {
+    const code=document.getElementById("otp").value.trim();
+    btn.disabled=true;btn.textContent="Verifying…";
+    const {data,error}=await sb.auth.verifyOtp({email:authEmail,token:code,type:"email"});
+    btn.disabled=false;btn.textContent="Verify";
+    if(error){toast("Wrong or expired code.");return;}
+    session=data.session;
+    const has=await pullSync();
+    if(S.profile&&has){enterApp();}
+    else if(S.profile){enterWizard();}
+    else show("f-handle");
+  }
+}
+function genCode(){const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789";let c="";for(let i=0;i<4;i++)c+=A[Math.floor(Math.random()*A.length)];return "GTM-"+c;}
+async function createProfile(){
+  const name=document.getElementById("dname").value.trim();
+  const handle=document.getElementById("dhandle").value.trim().toLowerCase();
+  if(!name){toast("Name?");return;}
+  if(!/^[a-z0-9_]{3,20}$/.test(handle)){toast("Handle: 3–20 chars, a–z 0–9 _");return;}
+  if(session&&sb){
+    for(let i=0;i<5;i++){
+      const code=genCode();
+      const {error}=await sb.from("profiles").insert({id:session.user.id,handle,display_name:name,friend_code:code});
+      if(!error){S.profile={id:session.user.id,handle,name,code};break;}
+      if(error.message.includes("handle")){toast("Handle taken — try another.");return;}
+    }
+    if(!S.profile){toast("Could not create profile — try again.");return;}
+  } else {
+    S.profile={id:"local",handle,name,code:genCode()+"·offline"};
+  }
+  save();enterWizard();
+}
+function startNew(){
+  if(initSB()){show("f-auth");authStage=0;document.getElementById("otpfield").style.display="none";document.getElementById("authbtn").textContent="Send code";}
+  else{if(!S.profile)show("f-handle");else if(!S.roadmap)enterWizard();else enterApp();}
+}
+async function signOut(){if(sb&&session){await sb.auth.signOut();}localStorage.removeItem(KEY);location.reload();}
+
+/* ═════════ WIZARD ═════════ */
+const W={step:0,O:{arenas:[],purchases:[{name:"",price:""},{name:"",price:""},{name:"",price:""}],treats:["",""]}};
+const WSTEPS=["arenas","trend","career","fitness","health","money","business","hobby","study","buys","time"];
+function activeSteps(){
+  const a=W.O.arenas;
+  return WSTEPS.filter(s=>{
+    if(["arenas","trend","buys","time"].includes(s))return true;
+    return a.includes(s);
+  });
+}
+function enterWizard(){W.step=0;show("f-wiz");drawWiz();}
+function drawWiz(){
+  const steps=activeSteps(),cur=steps[W.step],b=document.getElementById("wbody");
+  document.getElementById("wsteps").innerHTML=steps.map((s,i)=>`<i class="${i<=W.step?"on":""}"></i>`).join("");
+  document.getElementById("wback").style.visibility=W.step===0?"hidden":"visible";
+  document.getElementById("wnext").textContent=W.step===steps.length-1?"Build my season":"Continue";
+  const O=W.O;
+  const chip=(id,l,on,tr)=>`<div class="chp ${on?"on":""}" data-c="${id}">${l}${tr?'<span class="tr">TRENDING</span>':""}</div>`;
+  if(cur==="arenas")b.innerHTML=`<h2>Where do you want to level up?</h2><div class="p">Pick up to five. Each gets weekly quests.</div>
+    <div class="chips" id="arenachips">${Object.entries(ARENA_N).map(([k,v])=>chip(k,v,O.arenas.includes(k))).join("")}</div>`;
+  if(cur==="trend")b.innerHTML=`<h2>Anything from what's trending?</h2><div class="p">Optional — these plug straight into your plan.</div>
+    <div class="chips" id="trendchips">${TRENDS.map(t=>chip(t.id,t.l,(O.trends||[]).includes(t.id),t.tr)).join("")}</div>`;
+  if(cur==="career")b.innerHTML=`<h2>Career</h2>
+    <div class="field"><label>Going for a certification?</label><select id="w_cert">
+      <option value="pmp">PMP</option><option value="pspo">PSPO / CSPO</option><option value="aws">AWS</option>
+      <option value="data">Data Analytics</option><option value="ai">AI / GenAI</option><option value="custom">Something else</option><option value="none">No cert — job focus</option></select></div>
+    <div class="field" id="certnamef" style="display:none;"><label>Name it</label><input id="w_certname" maxlength="40"></div>
+    <div class="chips"><div class="chp ${O.jobSwitch?"on":""}" id="w_jobswitch">I want a job switch this season</div></div>`;
+  if(cur==="fitness")b.innerHTML=`<h2>Fitness</h2>
+    <div class="field"><label>Where are you now?</label><select id="w_fitlevel">
+      <option value="start">Starting from zero</option><option value="5k">Can run 5K</option><option value="10k">Can run 10K</option><option value="half">Half-marathon done</option></select></div>
+    <div class="field"><label>The goal</label><select id="w_fitgoal">
+      <option value="5k">5K non-stop</option><option value="10k">10K</option><option value="half">Half marathon</option><option value="marathon">Full marathon</option></select></div>
+    <div class="field"><label>Run days per week</label><select id="w_fitdays"><option>2</option><option selected>3</option><option>4</option></select></div>`;
+  if(cur==="health")b.innerHTML=`<h2>Health & food</h2>
+    <div class="field"><label>You eat</label><select id="w_diet"><option value="veg">Vegetarian</option><option value="egg" selected>Veg + eggs</option><option value="nonveg">Everything</option></select></div>
+    <div class="field"><label>Body goal</label><select id="w_weight"><option value="lose">Lose weight</option><option value="maintain">Maintain</option><option value="gain">Build</option></select></div>
+    <div class="chips"><div class="chp ${O.fixedDinner?"on":""}" id="w_dinner">Dinner is fixed / heavy at home</div></div>`;
+  if(cur==="money")b.innerHTML=`<h2>Money</h2>
+    <div class="field"><label>Monthly savings target (₹)</label><input id="w_savings" inputmode="numeric" placeholder="40000" value="${O.savings||""}"></div>
+    <div class="p">Rule of the game: things get bought in full, in cash. No EMIs in this house.</div>`;
+  if(cur==="business")b.innerHTML=`<h2>Business</h2>
+    <div class="field"><label>What is it?</label><input id="w_biz" maxlength="40" placeholder="waffle store, agency, freelancing…" value="${O.bizType||""}"></div>
+    <div class="field"><label>Stage</label><select id="w_bizstage"><option value="idea">Idea</option><option value="new">Just started</option><option value="breakeven" selected>Around break-even</option><option value="profit">Profitable</option></select></div>`;
+  if(cur==="hobby")b.innerHTML=`<h2>Hobby</h2>
+    <div class="field"><label>Which one?</label><input id="w_hobby" maxlength="30" placeholder="badminton, guitar, chess…" value="${O.hobbyName||""}"></div>`;
+  if(cur==="study")b.innerHTML=`<h2>Study</h2>
+    <div class="field"><label>What are you preparing for?</label><input id="w_study" maxlength="40" placeholder="exam, course, language…" value="${O.studyWhat||""}"></div>`;
+  if(cur==="buys")b.innerHTML=`<h2>What are you saving to buy?</h2><div class="p">These become your ladder — with real dates from your savings rate. Cash only.</div>
+    <div id="buylist">${O.purchases.map((p,i)=>`<div class="buyrow"><input placeholder="Thing (watch, phone, car…)" data-bn="${i}" value="${p.name||""}"><input placeholder="₹ price" inputmode="numeric" data-bp="${i}" value="${p.price||""}"></div>`).join("")}</div>
+    <button class="linkbtn" style="text-align:left;padding:6px 0;" onclick="W.O.purchases.push({name:'',price:''});captureWiz();drawWiz()">+ add another</button>
+    <div class="field" style="margin-top:10px;"><label>Two treats you'd love as small rewards</label>
+    <input id="w_t0" maxlength="40" placeholder="e.g. biryani night" value="${O.treats[0]||""}" style="margin-bottom:8px;"><input id="w_t1" maxlength="40" placeholder="e.g. game credits" value="${O.treats[1]||""}"></div>`;
+  if(cur==="time")b.innerHTML=`<h2>How much can you actually give?</h2><div class="p">Be honest — the win line scales to this. You can always overshoot.</div>
+    <div class="chips">
+      <div class="chp ${O.hours==="light"?"on":""}" data-h="light">~4 hrs/week · gentle</div>
+      <div class="chp ${O.hours==="mid"||!O.hours?"on":""}" data-h="mid">~7 hrs/week · solid</div>
+      <div class="chp ${O.hours==="high"?"on":""}" data-h="high">10+ hrs/week · aggressive</div></div>`;
+  bindWiz(cur);
+  window.scrollTo({top:0});
+}
+function bindWiz(cur){
+  document.querySelectorAll("#arenachips .chp").forEach(c=>c.onclick=()=>{
+    const id=c.dataset.c,a=W.O.arenas;
+    if(a.includes(id))W.O.arenas=a.filter(x=>x!==id);
+    else if(a.length<5)W.O.arenas.push(id);
+    else{toast("Five max — focus is the feature.");return;}
+    c.classList.toggle("on");
+  });
+  document.querySelectorAll("#trendchips .chp").forEach(c=>c.onclick=()=>{
+    W.O.trends=W.O.trends||[];const id=c.dataset.c;
+    if(W.O.trends.includes(id))W.O.trends=W.O.trends.filter(x=>x!==id);else W.O.trends.push(id);
+    c.classList.toggle("on");
+    const t=TRENDS.find(x=>x.id===id);
+    if(t&&c.classList.contains("on")&&!W.O.arenas.includes(t.arena)&&W.O.arenas.length<5){W.O.arenas.push(t.arena);toast(ARENA_N[t.arena]+" added to your arenas.");}
+  });
+  const js=document.getElementById("w_jobswitch");if(js)js.onclick=()=>{W.O.jobSwitch=!W.O.jobSwitch;js.classList.toggle("on");};
+  const dn=document.getElementById("w_dinner");if(dn)dn.onclick=()=>{W.O.fixedDinner=!W.O.fixedDinner;dn.classList.toggle("on");};
+  const ct=document.getElementById("w_cert");if(ct){ct.value=W.O.cert||"pmp";ct.onchange=()=>{document.getElementById("certnamef").style.display=ct.value==="custom"?"block":"none";};}
+  document.querySelectorAll("[data-h]").forEach(c=>c.onclick=()=>{W.O.hours=c.dataset.h;document.querySelectorAll("[data-h]").forEach(x=>x.classList.remove("on"));c.classList.add("on");});
+}
+function captureWiz(){
+  const g=id=>{const e=document.getElementById(id);return e?e.value.trim():undefined;};
+  const O=W.O;
+  if(g("w_cert")!==undefined){O.cert=g("w_cert");O.certName=g("w_certname");}
+  if(g("w_fitlevel")!==undefined){O.fitLevel=g("w_fitlevel");O.fitGoal=g("w_fitgoal");O.fitDays=Number(g("w_fitdays"));}
+  if(g("w_diet")!==undefined){O.diet=g("w_diet");O.weight=g("w_weight");}
+  if(g("w_savings")!==undefined)O.savings=Number((g("w_savings")||"").replace(/[^0-9]/g,""));
+  if(g("w_biz")!==undefined){O.bizType=g("w_biz");O.bizStage=g("w_bizstage");}
+  if(g("w_hobby")!==undefined)O.hobbyName=g("w_hobby");
+  if(g("w_study")!==undefined)O.studyWhat=g("w_study");
+  document.querySelectorAll("[data-bn]").forEach(e=>O.purchases[e.dataset.bn].name=e.value.trim());
+  document.querySelectorAll("[data-bp]").forEach(e=>O.purchases[e.dataset.bp].price=Number(e.value.replace(/[^0-9]/g,"")));
+  if(g("w_t0")!==undefined)O.treats=[g("w_t0"),g("w_t1")];
+}
+function wizNext(){
+  captureWiz();
+  const steps=activeSteps();
+  if(steps[W.step]==="arenas"&&W.O.arenas.length===0){toast("Pick at least one arena.");return;}
+  if(W.step<steps.length-1){W.step++;drawWiz();return;}
+  if(!W.O.hours)W.O.hours="mid";
+  S.onboarding=W.O;S.roadmap=genRoadmap(W.O);save();
+  enterApp();toast("Season built. Week 1 starts Monday — warm-up counts now.");
+}
+function wizBack(){if(W.step>0){captureWiz();W.step--;drawWiz();}}
+function regen(){if(confirm("Rebuild your season from fresh answers? Progress on old quests is kept in XP but the plan changes.")){W.step=0;W.O=Object.assign({arenas:[],purchases:[{name:"",price:""}],treats:["",""]},S.onboarding||{});enterWizard();}}
+
+/* ═════════ APP RENDER ═════════ */
+const el=id=>document.getElementById(id);
+function enterApp(){
+  show(null);el("app").style.display="block";el("nav").style.display="flex";
+  curW=pickWeek();render();
+  if(session){pushSync();pollGifts();}
+}
+function render(){renderToday();renderQuests();renderMiles();renderShop();renderYou();renderFriends();syncHeader();syncRing();}
+function syncHeader(){
+  const xp=totalXP(),{l}=lvlOf(xp);
+  el("hlvl").textContent=l;el("hpts").textContent=pts();
+  el("balance").innerHTML=pts()+"<small>points</small>";
+  if(l>(S.lvlSeen||1)){S.lvlSeen=l;save();el("lvnum").textContent=l;el("lvtitle").textContent=titleOf(l);el("lvlup").classList.add("on");burst(90);sfx("lvl");}
+  else if(l<(S.lvlSeen||1)){S.lvlSeen=l;save();}
+  el("youname").textContent=S.profile?S.profile.name:"You";
+  el("youtitle").textContent="Level "+l+" · "+titleOf(l)+" · "+xp+" XP · @"+(S.profile?S.profile.handle:"");
+}
+let ringShown=0,ringAnim=null;
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function syncRing(){
+  const w=wk(curW),xp=weekXP(curW),t=Math.min(xp/w.winLine,1);
+  el("ringxp").textContent=xp;el("ringlbl").textContent="of "+w.winLine;
+  el("ringtitle").textContent="Week "+w.n+(curW===pickWeek()?" · now":"");
+  el("ringdesc").textContent=w.label+" · "+(xp>=w.winLine?"cleared":(w.winLine-xp)+" XP to the win line");
+  el("wonpill").classList.toggle("on",weekWon(curW));
+  cancelAnimationFrame(ringAnim);
+  const from=ringShown,dur=RM?0:500,t0=performance.now();
+  (function step(ts){const k=dur?Math.min((ts-t0)/dur,1):1,e=1-Math.pow(1-k,3);
+    ringShown=from+(t-from)*e;drawRing(ringShown);
+    if(k<1)ringAnim=requestAnimationFrame(step);})(t0);
+}
+function drawRing(p){
+  const cv=el("ring"),dpr=devicePixelRatio||1,s=cv.clientWidth||132;
+  if(cv.width!==s*dpr){cv.width=s*dpr;cv.height=s*dpr;}
+  const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,s,s);
+  const r=s/2-9;c.lineWidth=11;c.lineCap="round";
+  c.strokeStyle=css("--track");c.beginPath();c.arc(s/2,s/2,r,0,7);c.stroke();
+  if(p>0.004){const g=c.createLinearGradient(0,0,s,s);g.addColorStop(0,css("--blue"));g.addColorStop(1,css("--green"));
+    c.strokeStyle=p>=1?css("--green"):g;c.beginPath();c.arc(s/2,s/2,r,-Math.PI/2,-Math.PI/2+p*Math.PI*2);c.stroke();}
+}
+function renderToday(){
+  const d=new Date(),dow=d.getDay(),t=todayISO(),hr=d.getHours();
+  el("greet").textContent=hr<12?"Good morning":hr<17?"Good afternoon":"Good evening";
+  el("datesub").textContent=d.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})+(t<R().start?" · season starts "+new Date(R().start+"T12:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short"})+" — warm-up counts":"");
+  if(!S.habits[t])S.habits[t]={};
+  const hl=el("habitlist");hl.innerHTML="";
+  R().habits.forEach(h=>{
+    const due=h.days.includes(dow),on=!!S.habits[t][h.id];
+    const r=document.createElement("div");
+    r.className="row"+(on?" done":"")+(!due?" rest":"");
+    r.innerHTML=`<button class="ck"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 7"/></svg></button>
+      <div class="m"><div class="t">${h.t}</div>${h.s||!due?`<div class="s">${due?h.s:"off today"}</div>`:""}</div><div class="v">+2</div>`;
+    const tap=()=>{const now=!S.habits[t][h.id];S.habits[t][h.id]=now;save();
+      r.classList.toggle("done",now);
+      if(now){sfx("chk");buzz(8);}
+      syncHeader();syncRing();el("chainlbl").textContent=dayChain()+" day chain";syncMileBars();};
+    r.querySelector(".ck").onclick=tap;r.querySelector(".m").onclick=tap;
+    hl.appendChild(r);
+  });
+  el("chainlbl").textContent=dayChain()+" day chain";
+  const diet=MEALS[R().diet]||MEALS.egg,idx=(dow+6)%7;
+  if(gutOn()){el("fuelcard").style.display="block";
+    el("fuel").innerHTML=`<b>Breakfast</b> — ${diet.b[idx]}<br><b>Lunch</b> — ${diet.l[idx]}<br><b>Dinner</b> — ${S.onboarding&&S.onboarding.fixedDinner?"the heavy one, earned. Then the walk.":"light, early if you can."}`;}
+  else el("fuelcard").style.display="none";
+}
+function renderQuests(){
+  const seg=el("seg");seg.innerHTML="";
+  const w=wk(curW);
+  el("qsub").textContent=w.tasks.length+" per week · win at "+w.winLine+" XP";
+  R().weeks.forEach(x=>{
+    const b=document.createElement("button");
+    b.innerHTML=`W${x.n}<span class="w">${weekWon(x.id)?"✓":""}</span>`;
+    if(x.id===curW)b.classList.add("on");
+    b.onclick=()=>{curW=x.id;renderQuests();syncRing();sfx("tap");};
+    seg.appendChild(b);
+  });
+  seg.querySelector(".on")&&seg.querySelector(".on").scrollIntoView({inline:"center",block:"nearest"});
+  const area=el("questarea");area.innerHTML="";
+  const usedSkips=()=>w.tasks.filter(t=>S.skips[t.id]).length;
+  const maxSkips=()=>1+(S.extraSkip[curW]?1:0);
+  for(const aid of Object.keys(R().areas)){
+    const ts=w.tasks.filter(t=>t.area===aid);if(!ts.length)continue;
+    const card=document.createElement("div");card.className="card";
+    card.innerHTML=`<div class="cardtitle">${R().areas[aid].n} <span class="r" id="qc_${aid}">${ts.filter(t=>S.tasks[t.id]).length} of ${ts.length}</span></div>`;
+    ts.forEach(t=>{
+      const on=!!S.tasks[t.id],sk=!!S.skips[t.id];
+      const r=document.createElement("div");
+      r.className="row"+(on?" done":"")+(sk?" skipped":"");
+      r.innerHTML=`<button class="ck"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 7"/></svg></button>
+        <div class="m"><div class="t">${t.t}</div><div class="s">+10 XP · +5 pts</div></div>
+        <button class="skipbtn">${sk?"Skipped":"Skip"}</button>`;
+      const tap=()=>{
+        const wasWon=weekWon(curW),now=!S.tasks[t.id];
+        if(now){S.tasks[t.id]=true;delete S.skips[t.id];r.classList.remove("skipped");sfx("chk");buzz(8);}
+        else delete S.tasks[t.id];
+        save();r.classList.toggle("done",now);
+        el("qc_"+aid).textContent=ts.filter(x=>S.tasks[x.id]).length+" of "+ts.length;
+        syncHeader();syncRing();syncMileBars();
+        if(!wasWon&&weekWon(curW)){burst(120);sfx("win");buzz([20,40,20]);toast("Week "+w.n+" cleared — shop's open.");renderQuests();}
+      };
+      r.querySelector(".ck").onclick=tap;r.querySelector(".m").onclick=tap;
+      r.querySelector(".skipbtn").onclick=e=>{e.stopPropagation();
+        if(S.tasks[t.id])return;
+        if(S.skips[t.id])delete S.skips[t.id];
+        else{if(usedSkips()>=maxSkips()){toast("Skip used. One more is in the shop — or do the thing.");return;}S.skips[t.id]=true;}
+        save();r.classList.toggle("skipped",!!S.skips[t.id]);
+        r.querySelector(".skipbtn").textContent=S.skips[t.id]?"Skipped":"Skip";syncRing();};
+      card.appendChild(r);
+    });
+    area.appendChild(card);
+  }
+  if(gutOn()){
+    const g=document.createElement("div");g.className="card";
+    g.innerHTML=`<div class="cardtitle">Meals this week <span class="r">${gutPts(curW)} of ${w.days} clean days</span></div>
+      <div class="note">Clean day = breakfast + lunch both on plan (Today screen). 5+ clean days = <b>+10 XP</b> this week.</div>`;
+    area.appendChild(g);
+  }
+}
+function syncMileBars(){
+  R().miles.forEach(m=>{const b=el("mb_"+m.id),p=el("mp_"+m.id);
+    if(!b)return;const pr=mileProg(m),done=!!S.miles[m.id];
+    b.style.width=(pr/m.goal*100)+"%";p.textContent=done?"Done":Math.round(pr/m.goal*100)+"%";});
+}
+function renderMiles(){
+  const mc=el("milecards");mc.innerHTML="";
+  const card=document.createElement("div");card.className="card";
+  card.innerHTML=`<div class="cardtitle">This season</div>`;
+  R().miles.forEach(m=>{
+    const done=!!S.miles[m.id],p=mileProg(m);
+    const x=document.createElement("div");x.className="mile"+(done?" done":"");
+    x.innerHTML=`<div class="top"><div class="n">${m.n}</div><div class="pct" id="mp_${m.id}">${done?"Done":Math.round(p/m.goal*100)+"%"}</div></div>
+      <div class="d">${m.d}</div><div class="mbar"><i id="mb_${m.id}" style="width:${p/m.goal*100}%"></i></div>
+      <div class="act"><button class="mbtn${!done&&p>=m.goal*.8?" rdy":""}">${done?"Completed ✓":"Mark complete"}</button></div>`;
+    x.querySelector(".mbtn").onclick=()=>{
+      if(S.miles[m.id]){if(confirm("Undo this milestone?")){delete S.miles[m.id];S.log=S.log.filter(e=>e.id!==m.id);save();render();}return;}
+      if(!confirm(`Completed in real life?\n\n"${m.n}"\n\nThe system runs on honesty.`))return;
+      const note=prompt("Journal note — score, time, numbers (optional):")||"";
+      S.miles[m.id]=true;S.log.unshift({id:m.id,t:m.n,note,d:todayISO()});save();
+      burst(160);sfx("mile");buzz([30,50,30]);render();
+    };
+    card.appendChild(x);
+  });
+  mc.appendChild(card);
+  const lad=el("ladder");lad.innerHTML=R().ladder.length?"":`<div class="note">No purchases set. Regenerate your season to add some.</div>`;
+  R().ladder.forEach(l=>{
+    const got=!!S.purch["lad_"+l.id];
+    const r=document.createElement("div");r.className="ladrow"+(got?" got":"");
+    r.innerHTML=`<div class="ldot"></div><div class="m"><div class="t">${l.t}</div><div class="s">${l.s}</div></div><div class="w">${got?"Done ✓":l.w}</div>`;
+    r.onclick=()=>{
+      if(got){if(confirm("Undo?")){delete S.purch["lad_"+l.id];save();render();}return;}
+      if(!confirm(`Bought in full, in cash?\n\n${l.t}`))return;
+      const note=prompt("Journal note (optional):")||"";
+      S.purch["lad_"+l.id]=1;S.log.unshift({id:"lad_"+l.id,t:l.t,note,d:todayISO()});save();
+      burst(220);sfx("mile");render();
+    };
+    lad.appendChild(r);
+  });
+}
+function renderShop(){
+  const sl=el("shoplist");sl.innerHTML="";
+  R().shop.forEach(it=>{
+    const count=S.purch[it.id]||0;
+    const gate=it.type==="treat"?weekWon(curW):it.type==="token"?!S.extraSkip[curW]:true;
+    const afford=pts()>=it.p;
+    const r=document.createElement("div");r.className="itemrow";
+    r.innerHTML=`<div class="m"><div class="t">${it.n}${count?` <span style="color:var(--green)">×${count}</span>`:""}</div><div class="s">${it.d}</div></div>
+      <button class="pbtn ${gate&&afford?"can":""}" ${gate?"":"disabled"}>${it.p} pts</button>`;
+    r.querySelector(".pbtn").onclick=()=>{
+      if(!gate){toast(it.type==="treat"?"Win the week first — close the ring.":"Not available right now.");return;}
+      if(!afford){toast("Not enough points.");return;}
+      S.spent+=it.p;S.purch[it.id]=count+1;
+      if(it.type==="token")S.extraSkip[curW]=true;
+      save();sfx("buy");buzz(12);renderShop();syncHeader();
+      toast(it.n+" — you earned it, literally.");
+    };
+    sl.appendChild(r);
+  });
+}
+function renderYou(){
+  const at=el("attrs");at.innerHTML="";
+  const stats=[...new Set(Object.values(R().areas).map(a=>a.stat).concat(["Health"]))];
+  const vals=stats.map(statVal),mx=Math.max(...vals,10);
+  stats.forEach((k,i)=>{const r=document.createElement("div");r.className="attr";
+    r.innerHTML=`<div class="k">${k}</div><div class="bar"><i style="width:${vals[i]/mx*100}%"></i></div><div class="v">${vals[i]}</div>`;
+    at.appendChild(r);});
+  const wc=el("wchart");wc.innerHTML="";
+  R().weeks.slice(0,12).forEach(w=>{
+    const xp=weekXP(w.id);
+    const c=document.createElement("div");c.style.cssText="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end;";
+    c.innerHTML=`<div style="width:100%;max-width:26px;flex:1;background:var(--track);border-radius:5px;display:flex;align-items:flex-end;overflow:hidden;"><i style="display:block;width:100%;min-height:2px;height:${Math.max(xp/110*100,2)}%;background:${weekWon(w.id)?"var(--green)":"var(--blue)"};border-radius:5px;"></i></div><div style="font-size:9px;color:var(--tx3);font-weight:600;">${w.n}</div>`;
+    wc.appendChild(c);});
+  const j=el("journal");
+  j.innerHTML=S.log.length?"":`<div class="note">Completed milestones land here with your notes — receipts for the days you doubt yourself.</div>`;
+  S.log.slice(0,20).forEach(e=>{const r=document.createElement("div");r.className="jrow";
+    r.style.cssText="padding:11px 0;border-bottom:1px solid var(--sep);";
+    r.innerHTML=`<div style="font-size:14px;font-weight:500;">${e.t}</div><div style="font-size:12px;color:var(--tx2);margin-top:2px;">${new Date(e.d+"T12:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short"})}${e.note?" — "+e.note:""}</div>`;
+    j.appendChild(r);});
+  el("sndbtn").textContent="Sound: "+(S.sound?"on":"off");
+  el("authstate").textContent=session?"Sign out":"Solo mode — sign in to go social";
+}
+
+/* ═════════ FRIENDS ═════════ */
+let giftTarget=null,giftAmt=10;
+function renderFriends(){
+  el("mycode").textContent=S.profile?S.profile.code.replace("·offline",""):"—";
+  el("codehint").textContent=session?"Share it anywhere — friends add you with it":"Offline code — sign in to make it real";
+  el("addcard").style.display=session?"block":"none";
+  if(!session){
+    el("flist").innerHTML=`<div class="note">${sbReady()?"Sign in (You tab → sign out → sign in) to follow friends, see their progress and gift points.":"Multiplayer needs the backend — the owner adds two config values and this lights up. Everything else works solo."}</div>`;
+    return;
+  }
+  loadFriends();loadGifts();
+}
+async function loadFriends(){
+  try{
+    const {data:fl}=await sb.from("follows").select("followee").eq("follower",session.user.id);
+    if(!fl||!fl.length){el("flist").innerHTML=`<div class="note">No one yet. Trade codes.</div>`;return;}
+    const ids=fl.map(f=>f.followee);
+    const {data:ps}=await sb.from("profiles").select("id,handle,display_name,friend_code,level,week_xp,chain,updated_at").in("id",ids);
+    const box=el("flist");box.innerHTML="";
+    (ps||[]).sort((a,b)=>b.week_xp-a.week_xp).forEach(p=>{
+      const r=document.createElement("div");r.className="frow";
+      const fresh=(Date.now()-new Date(p.updated_at).getTime())<36e5*48;
+      r.innerHTML=`<div class="avvy">${(p.display_name||"?")[0].toUpperCase()}</div>
+        <div class="m"><div class="t">${p.display_name} <span style="font-weight:400;color:var(--tx3);font-size:12px;">@${p.handle}</span></div>
+        <div class="s">Lv ${p.level} · ${p.week_xp} XP this week · ${p.chain}🔥${fresh?"":" · quiet lately"}</div></div>
+        <button class="giftbtn">Gift</button>`;
+      r.querySelector(".giftbtn").onclick=()=>{giftTarget=p;el("giftto").textContent="Gift points to "+p.display_name;el("giftsheet").classList.add("on");};
+      box.appendChild(r);
+    });
+  }catch(e){el("flist").innerHTML=`<div class="note">Couldn't load — check connection.</div>`;}
+}
+async function addFriend(){
+  const code=el("addcode").value.trim().toUpperCase();
+  if(!/^GTM-[A-Z2-9]{4}$/.test(code)){toast("Codes look like GTM-7K2X");return;}
+  if(S.profile&&code===S.profile.code){toast("That's you.");return;}
+  try{
+    const {data,error}=await sb.rpc("lookup_code",{code});
+    if(error||!data||!data.length){toast("No player with that code.");return;}
+    await sb.from("follows").insert({follower:session.user.id,followee:data[0].id});
+    el("addcode").value="";toast("Following "+data[0].display_name+".");loadFriends();
+  }catch(e){toast("Couldn't add — try again.");}
+}
+async function loadGifts(){
+  try{
+    const {data}=await sb.from("gifts").select("*").eq("to_id",session.user.id).order("created_at",{ascending:false}).limit(15);
+    const box=el("giftfeed");
+    if(!data||!data.length){box.innerHTML=`<div class="note">Points friends send you land here — and in your balance.</div>`;return;}
+    const ids=[...new Set(data.map(g=>g.from_id))];
+    const {data:ps}=await sb.from("profiles").select("id,display_name").in("id",ids);
+    const nameOf=id=>(ps||[]).find(p=>p.id===id)?.display_name||"Someone";
+    box.innerHTML="";
+    data.forEach(g=>{
+      const r=document.createElement("div");r.style.cssText="padding:10px 0;border-bottom:1px solid var(--sep);";
+      r.innerHTML=`<div class="t" style="font-size:14px;"><b>+${g.amount} pts</b> from ${nameOf(g.from_id)}</div>
+        ${g.message?`<div style="font-size:13px;color:var(--tx2);margin-top:2px;">“${g.message}”</div>`:""}
+        <div style="font-size:11px;color:var(--tx3);margin-top:2px;">${new Date(g.created_at).toLocaleDateString("en-IN",{day:"numeric",month:"short"})}</div>`;
+      box.appendChild(r);
+    });
+  }catch(e){}
+}
+async function pollGifts(){
+  if(!sb||!session)return;
+  await refreshGiftNet();
+  try{
+    const {data}=await sb.from("gifts").select("id,amount,from_id").eq("to_id",session.user.id).order("id",{ascending:false}).limit(5);
+    if(data&&data.length){
+      const newest=data[0].id;
+      if(S.seenGifts&&newest>S.seenGifts){
+        const fresh=data.filter(g=>g.id>S.seenGifts);
+        const total=fresh.reduce((a,g)=>a+g.amount,0);
+        toast(`🎁 +${total} points from your people. Check Friends.`);burst(80);sfx("ach");
+      }
+      S.seenGifts=newest;save();
+    }
+  }catch(e){}
+  syncHeader();
+}
+document.querySelectorAll("#giftamts button").forEach(b=>b.onclick=()=>{
+  giftAmt=Number(b.dataset.a);
+  document.querySelectorAll("#giftamts button").forEach(x=>x.classList.remove("on"));b.classList.add("on");});
+async function sendGift(){
+  if(!giftTarget)return;
+  if(pts()<giftAmt){toast("Not enough points to gift.");return;}
+  const msg=el("giftmsg").value.trim();
+  try{
+    const {data,error}=await sb.rpc("send_gift",{to_code:giftTarget.friend_code,amt:giftAmt,msg});
+    if(error){toast(error.message.replace(/^.*?: /,""));return;}
+    el("giftsheet").classList.remove("on");el("giftmsg").value="";
+    S.giftNet-=giftAmt;save();syncHeader();
+    toast(`Sent ${giftAmt} pts to ${giftTarget.display_name}.`);sfx("buy");
+  }catch(e){toast("Couldn't send — try again.");}
+}
+function copyCode(){
+  const c=S.profile?S.profile.code.replace("·offline",""):"";
+  (navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast("Code copied."),()=>prompt("Copy:",c));
+}
+
+/* ═════════ DATA ═════════ */
+function exportData(){
+  const blob=new Blob([JSON.stringify({v:1,exported:new Date().toISOString(),state:S},null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="life-gtm-"+(S.profile?S.profile.handle:"save")+"-"+todayISO()+".json";a.click();
+}
+function importData(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);S=Object.assign(fresh(),d.state||d);save();render();toast("Save imported.");}catch(e){toast("That file didn't parse.");}};
+  r.readAsText(f);
+}
+function resetAll(){if(confirm("Erase everything on this device? (Your cloud save survives if signed in.)")){localStorage.removeItem(KEY);location.reload();}}
+function toggleSound(){S.sound=!S.sound;save();el("sndbtn").textContent="Sound: "+(S.sound?"on":"off");if(S.sound)sfx("tap");}
+
+/* ═════════ FX ═════════ */
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const buzz=p=>{try{navigator.vibrate&&navigator.vibrate(p);}catch(e){}};
+let AC=null;
+function sfx(kind){
+  if(!S.sound)return;
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==="suspended")AC.resume();
+    const t=AC.currentTime;
+    const n=(f,st,dur,vol)=>{const o=AC.createOscillator(),g=AC.createGain();o.type="sine";o.frequency.value=f;
+      g.gain.setValueAtTime(0,t+st);g.gain.linearRampToValueAtTime(vol||.05,t+st+.012);g.gain.exponentialRampToValueAtTime(.0001,t+st+dur);
+      o.connect(g).connect(AC.destination);o.start(t+st);o.stop(t+st+dur+.05);};
+    if(kind==="chk"){n(920,0,.1);n(1380,.06,.14);}
+    if(kind==="tap")n(660,0,.05,.03);
+    if(kind==="win"){n(660,0,.12);n(880,.1,.12);n(1174,.2,.24);}
+    if(kind==="lvl"){n(523,0,.14);n(659,.11,.14);n(784,.22,.14);n(1046,.33,.3,.06);}
+    if(kind==="mile"){n(392,0,.16);n(523,.12,.16);n(784,.24,.3,.06);}
+    if(kind==="buy"){n(1568,0,.07,.04);n(2093,.06,.1,.04);}
+    if(kind==="ach"){n(988,0,.1);n(1319,.09,.2);}
+  }catch(e){}
+}
+let tmr=null;
+function toast(m){const t=el("toast");t.textContent=m;t.style.opacity=1;clearTimeout(tmr);tmr=setTimeout(()=>t.style.opacity=0,2800);}
+const cv=el("cfx"),cx=cv.getContext("2d");let parts=[],anim=null;
+function sizeC(){const d=devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;cv.style.width=innerWidth+"px";cv.style.height=innerHeight+"px";cx.setTransform(d,0,0,d,0,0);}
+addEventListener("resize",sizeC);sizeC();
+function burst(n){
+  if(RM)return;
+  const cols=[css("--blue"),css("--green"),css("--orange"),"#ffd60a"];
+  for(let i=0;i<n;i++)parts.push({x:innerWidth/2+(Math.random()-.5)*120,y:innerHeight*.28,vx:(Math.random()-.5)*9,vy:-Math.random()*10-2,s:Math.random()*5+2.5,c:cols[i%4],r:Math.random()*7,vr:(Math.random()-.5)*.25,life:90});
+  if(!anim)tick();
+}
+function tick(){
+  cx.clearRect(0,0,innerWidth,innerHeight);
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.28;p.r+=p.vr;p.life--;});
+  parts=parts.filter(p=>p.life>0&&p.y<innerHeight+20);
+  parts.forEach(p=>{cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.globalAlpha=Math.min(p.life/30,1);cx.fillRect(-p.s/2,-p.s/2,p.s,p.s);cx.restore();});
+  if(parts.length)anim=requestAnimationFrame(tick);else{anim=null;cx.clearRect(0,0,innerWidth,innerHeight);}
+}
+
+/* ═════════ NAV / BOOT ═════════ */
+document.querySelectorAll("nav button").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));
+    document.querySelectorAll(".screen").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");el("s-"+b.dataset.s).classList.add("on");
+    scrollTo({top:0});sfx("tap");
+    if(b.dataset.s==="today")syncRing();
+    if(b.dataset.s==="friends")renderFriends();
+  };
+});
+async function boot(){
+  el("offlinenote").textContent=sbReady()?"":"Running solo — multiplayer lights up when the backend is configured.";
+  if(initSB()){
+    const {data}=await sb.auth.getSession();
+    session=data.session||null;
+    if(session){await pullSync();
+      if(S.profile&&S.roadmap){enterApp();return;}
+      if(S.profile){enterWizard();return;}
+      show("f-handle");return;}
+  }
+  if(S.profile&&S.roadmap){enterApp();return;}
+  if(S.profile){enterWizard();return;}
+  show("f-start");
+}
+addEventListener("load",()=>{
+  if("serviceWorker" in navigator && location.protocol.indexOf("http")===0)
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  setTimeout(boot,60);
+});
+</script>
+</body>
+</html>
