@@ -1,4 +1,4 @@
-const CACHE = "lifegtm-app-v2";
+const CACHE = "lifegtm-app-v3";
 const CORE = ["./", "./index.html", "./config.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {

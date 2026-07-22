@@ -115,9 +115,38 @@ h1{font-size:30px;font-weight:700;letter-spacing:-.022em;margin:14px 0 2px;}
 .note{font-size:12.5px;color:var(--tx2);line-height:1.55;}
 .empty{padding:26px 10px;text-align:center;color:var(--tx2);font-size:14px;line-height:1.6;}
 nav{position:fixed;bottom:0;left:0;right:0;z-index:50;background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--sep);display:flex;justify-content:space-around;padding:6px 4px calc(8px + env(safe-area-inset-bottom));}
-nav button{background:none;border:none;cursor:pointer;color:var(--tx3);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:5px 6px;min-width:52px;}
-nav button svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+nav button{background:none;border:none;cursor:pointer;color:var(--tx3);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px;font-weight:600;padding:5px 3px;min-width:0;flex:1;}
+nav button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
 nav button.on{color:var(--blue);}
+/* notes */
+.notenav{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.ndir{width:40px;height:40px;flex:0 0 40px;border:none;border-radius:50%;background:var(--track);color:var(--tx);font-size:20px;cursor:pointer;}
+.ndir:disabled{opacity:.3;}
+.ndate{flex:1;text-align:center;}
+.ndate .nd1{font-size:17px;font-weight:700;letter-spacing:-.01em;}
+.ndate .nd2{font-size:12px;color:var(--tx2);margin-top:1px;}
+.energyrow{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.energyrow .el{font-size:12px;color:var(--tx2);font-weight:500;margin-right:2px;}
+.ec{padding:7px 12px;border-radius:100px;border:1.5px solid var(--sep);background:var(--card);font-size:13px;cursor:pointer;color:var(--tx);}
+.ec.on{border-color:var(--blue);color:var(--blue);font-weight:600;}
+#notetext{width:100%;border:none;background:transparent;color:var(--tx);font-size:16px;line-height:1.6;outline:none;resize:vertical;min-height:220px;font-family:inherit;}
+.nrow{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--sep);cursor:pointer;}
+.nrow:last-child{border-bottom:none;}
+.nrow .nemoji{font-size:18px;width:24px;text-align:center;}
+.nrow .nm{flex:1;min-width:0;}
+.nrow .nt{font-size:14px;font-weight:600;}
+.nrow .np{font-size:12px;color:var(--tx2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* timeline */
+.tlrow{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--sep);}
+.tlrow:last-child{border-bottom:none;}
+.tldot{width:9px;height:9px;flex:0 0 9px;border-radius:50%;background:var(--blue);margin-top:5px;}
+.tldot.done{background:var(--green);}
+.tlrow .tm{flex:1;}
+.tlrow .tt{font-size:14px;font-weight:600;letter-spacing:-.01em;}
+.tlrow .ts{font-size:12px;color:var(--tx2);margin-top:1px;}
+.tlrow .tw{font-size:12px;font-weight:700;color:var(--blue);white-space:nowrap;}
+.tlrow.done .tt{color:var(--tx3);}
+.tlrow.done .tw{color:var(--green);}
 .screen{display:none;}
 .screen.on{display:block;animation:fadein .22s ease;}
 @keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
@@ -187,21 +216,19 @@ nav button.on{color:var(--blue);}
     <h2 style="font-size:34px;">Life GTM</h2>
     <div class="p">Your goals — career, fitness, money, business, hobbies — turned into one game. Weekly quests, a ring to close, milestones that fill from real action, and friends who back you with XP.</div>
     <button class="cta" onclick="startNew()">Start my game</button>
-    <button class="linkbtn" id="signinlink" onclick="showAuth()">I already have an account</button>
+    <button class="linkbtn" id="signinlink" onclick="showAuth('signin')">I already have an account</button>
     <div class="note" id="offlinenote" style="text-align:center;margin-top:8px;"></div>
   </div>
 </div>
 
 <div class="full" id="f-auth">
   <div class="fwrap" style="padding-top:10vh;">
-    <h2>Sign in</h2>
-    <div class="p">We email you a one-tap sign-in link. No passwords, nothing to remember.</div>
-    <div class="field" id="emailfield"><label>Email</label><input id="email" type="email" inputmode="email" placeholder="you@example.com"></div>
-    <div class="field" id="otpfield" style="display:none;"></div>
-    <div id="authsent" style="display:none;">
-      <div class="p" style="font-size:15px;">📧 Link sent to <b id="sentto"></b>.<br><br>Open your email and tap <b>Sign in</b> — it'll bring you right back here, signed in. You can close this tab.</div>
-    </div>
-    <button class="cta" id="authbtn" onclick="authNext()">Email me a sign-in link</button>
+    <h2 id="authtitle">Create your account</h2>
+    <div class="p" id="authsub">Pick an email and password. That's your login — nothing to verify, nothing to lose.</div>
+    <div class="field"><label>Email</label><input id="email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com"></div>
+    <div class="field"><label>Password</label><input id="pass" type="password" autocomplete="current-password" placeholder="at least 6 characters"></div>
+    <button class="cta" id="authbtn" onclick="authNext()">Create account</button>
+    <button class="linkbtn" id="authtoggle" onclick="toggleAuthMode()">Already have an account? Sign in</button>
     <button class="linkbtn" onclick="show('f-start')">Back</button>
   </div>
 </div>
@@ -260,8 +287,28 @@ nav button.on{color:var(--blue);}
 
   <div class="screen" id="s-miles">
     <h1>Milestones</h1><div class="sub">Progress fills from your real actions</div>
+    <div class="card"><div class="cardtitle">Your timeline <span class="r" id="tl-end"></span></div><div id="timeline"></div></div>
     <div id="milecards"></div>
     <div class="card"><div class="cardtitle">The ladder <span class="r">cash only, zero debt</span></div><div id="ladder"></div></div>
+  </div>
+
+  <div class="screen" id="s-notes">
+    <h1>Notes</h1><div class="sub">Your daily headspace — write anything</div>
+    <div class="card">
+      <div class="notenav">
+        <button class="ndir" onclick="noteShift(-1)">‹</button>
+        <div class="ndate"><div class="nd1" id="noteday">Today</div><div class="nd2" id="notefull"></div></div>
+        <button class="ndir" id="nnext" onclick="noteShift(1)">›</button>
+      </div>
+      <div class="energyrow"><span class="el">Energy</span>
+        <button class="ec" data-e="1">🪫 Low</button>
+        <button class="ec" data-e="2">🔋 Ok</button>
+        <button class="ec" data-e="3">⚡ High</button>
+      </div>
+      <textarea id="notetext" placeholder="How did today go? What are you feeling, what drained or lifted you, what's on your mind…" rows="12"></textarea>
+      <div class="note" id="notesaved">Autosaves as you type.</div>
+    </div>
+    <div class="card"><div class="cardtitle">Recent entries</div><div id="noterecent"></div></div>
   </div>
 
   <div class="screen" id="s-friends">
@@ -309,6 +356,7 @@ nav button.on{color:var(--blue);}
   <button data-s="today" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Today</button>
   <button data-s="quests"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9"/></svg>Quests</button>
   <button data-s="miles"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h13l-2.5 4L18 12H5"/></svg>Miles</button>
+  <button data-s="notes"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14a0 0 0 010 0H6a0 0 0 010 0V3z"/><path d="M15 3v4h4M9 12h6M9 16h4"/></svg>Notes</button>
   <button data-s="friends"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="17.5" cy="9" r="2.8"/><path d="M15.5 14.7c.6-.1 1.3-.2 2-.2 2.9 0 5 1.8 5 4.5"/></svg>Friends</button>
   <button data-s="shop"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M9.5 10c0-1.1 1.1-2 2.5-2s2.5.9 2.5 2-1.1 2-2.5 2-2.5.9-2.5 2 1.1 2 2.5 2 2.5-.9 2.5-2"/></svg>Rewards</button>
   <button data-s="you"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>You</button>
@@ -331,13 +379,16 @@ nav button.on{color:var(--blue);}
 const CFG=window.GTM_CONFIG||{};
 let sb=null, session=null, online=false;
 function sbReady(){return !!(CFG.SUPABASE_URL&&CFG.SUPABASE_ANON_KEY&&window.supabase);}
-function initSB(){ if(sbReady()&&!sb){ sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY,{auth:{flowType:"implicit",detectSessionInUrl:true,persistSession:true,autoRefreshToken:true}}); } return !!sb; }
+function initSB(){ if(sbReady()&&!sb){ sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}}); } return !!sb; }
 
 /* ═════════ STATE ═════════ */
 const KEY="lifegtm_app_v1";
 let S=load();
-function fresh(){return {profile:null,onboarding:null,roadmap:null,tasks:{},skips:{},extraSkip:{},miles:{},habits:{},spent:0,purch:{},log:[],lvlSeen:1,sound:true,giftNet:0,seenGifts:0,follows:[]};}
+function fresh(){return {profile:null,onboarding:null,roadmap:null,tasks:{},skips:{},extraSkip:{},miles:{},habits:{},spent:0,purch:{},log:[],lvlSeen:1,sound:true,giftNet:0,seenGifts:0,follows:[],notes:{}};}
 function load(){try{const r=localStorage.getItem(KEY);if(r)return Object.assign(fresh(),JSON.parse(r));}catch(e){}return fresh();}
+/* AI key lives only on this device, never synced or sent to our servers */
+function aiKey(){try{return localStorage.getItem("lifegtm_aikey")||"";}catch(e){return"";}}
+function setAiKey(k){try{k?localStorage.setItem("lifegtm_aikey",k):localStorage.removeItem("lifegtm_aikey");}catch(e){}}
 let syncT=null;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} if(session){clearTimeout(syncT);syncT=setTimeout(pushSync,2500);} }
 
@@ -381,6 +432,62 @@ function genRoadmap(O){
     areas:Object.fromEntries(arenas.map(a=>[a,{n:ARENA_N[a],stat:ARENA_N[a]}])),diet:O.diet||"egg"};
 }
 const ARENA_N={career:"Career",fitness:"Fitness",health:"Health",money:"Money",business:"Business",hobby:"Hobby",study:"Study"};
+
+/* ═════════ AI GENERATION (bring-your-own free key) ═════════
+   Uses Google Gemini. The key stays on this device and is sent only to Google.
+   Falls back to the smart generator on any failure, so the app never breaks. */
+async function genRoadmapAI(O){
+  const key=aiKey();
+  if(!key) return genRoadmap(O);
+  const base=genRoadmap(O);                 // structural skeleton — dates, win lines, scoring
+  const arenaList=O.arenas.map(a=>ARENA_N[a]).join(", ");
+  const facts=[
+    O.cert&&O.cert!=="none"?("Certification goal: "+(CERTS[O.cert]||O.certName||O.cert)):"",
+    O.jobSwitch?"Wants a job switch this season":"",
+    O.fitLevel?("Fitness now: "+O.fitLevel+", goal: "+(O.fitGoal||"5k")+", "+(O.fitDays||3)+" run days/week"):"",
+    O.weight?("Body goal: "+O.weight):"",
+    O.savings?("Monthly savings target: ₹"+O.savings):"",
+    O.bizType?("Business: "+O.bizType+" ("+(O.bizStage||"")+")"):"",
+    O.hobbyName?("Hobby: "+O.hobbyName):"",
+    O.studyWhat?("Studying: "+O.studyWhat):"",
+    "Time available: "+(O.hours||"mid")
+  ].filter(Boolean).join(". ");
+  const prompt=`You are a world-class personal coach. Design a personalized 12-week growth season for someone leveling up in these areas: ${arenaList}.
+Their context: ${facts}.
+Return ONLY strict minified JSON, no markdown, with this exact shape:
+{"weeks":[{"n":1,"tasks":[{"area":"career","t":"..."}]}...12 weeks...],"daily":["directive 1","directive 2","directive 3","directive 4"],"dailyFocus":"one sentence on the daily habit theme"}
+Rules: area must be one of ${O.arenas.map(a=>'"'+a+'"').join(",")}. Exactly 2 tasks per area per week (so ${O.arenas.length*2} tasks each week). Tasks must be concrete, measurable, escalating week to week toward the goals, and doable in a week. "daily" = 3-5 short daily directives that together drive overall growth (mind, body, focus). Keep every string under 90 characters. Output must be valid JSON only.`;
+  try{
+    const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),30000);
+    const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key="+encodeURIComponent(key),{
+      method:"POST",headers:{"Content-Type":"application/json"},signal:ctrl.signal,
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.7,maxOutputTokens:4096,responseMimeType:"application/json"}})
+    });
+    clearTimeout(to);
+    if(!res.ok){ const e=await res.text(); throw new Error("Gemini "+res.status+": "+e.slice(0,120)); }
+    const j=await res.json();
+    const txt=j.candidates?.[0]?.content?.parts?.[0]?.text||"";
+    const ai=JSON.parse(txt.replace(/^```json\s*|\s*```$/g,""));
+    if(!ai.weeks||!Array.isArray(ai.weeks)) throw new Error("bad shape");
+    // Merge AI task text into our dated/scored skeleton
+    base.weeks.forEach((w,wi)=>{
+      const aw=ai.weeks[wi]; if(!aw||!aw.tasks) return;
+      const byArea={}; O.arenas.forEach(a=>byArea[a]=aw.tasks.filter(t=>t.area===a).map(t=>t.t).filter(Boolean));
+      w.tasks.forEach(t=>{ const pool=byArea[t.area]; if(pool&&pool.length){ const v=pool.shift(); if(v) t.t=v.slice(0,120); } });
+    });
+    if(Array.isArray(ai.daily)&&ai.daily.length){
+      base.habits=ai.daily.slice(0,6).map((t,i)=>({id:"h"+(i+1),t:String(t).slice(0,60),s:"AI daily goal",days:[0,1,2,3,4,5,6],stat:i%2?"Fitness":"Career"}));
+      // keep meal directives if health chosen
+      if(O.arenas.includes("health")){ base.habits.push({id:"hh1",t:"Breakfast on plan",s:"see fuel",days:[0,1,2,3,4,5,6],stat:"Health"}); base.habits.push({id:"hh2",t:"Lunch on plan",s:"fiber first",days:[0,1,2,3,4,5,6],stat:"Health"}); base.habits=base.habits.slice(0,6);}
+    }
+    base.dailyFocus=ai.dailyFocus||"";
+    base.byAI=true;
+    return base;
+  }catch(e){
+    console.warn("AI generation failed, using smart plan:",e.message);
+    base._aiError=e.message; return base;
+  }
+}
 function questLib(O){
   const cert=CERTS[O.cert]||O.certName||"your certification";
   const hobby=O.hobbyName||"your hobby";
@@ -545,10 +652,21 @@ function genLadder(O,start){
   });
 }
 function genShop(O){
-  const s=[{id:"t1",n:"Cheat meal license",d:"One meal, anything, zero guilt",p:35,type:"treat"},
+  const s=[
+   {id:"t1",n:"Cheat meal license",d:"One meal, anything, zero guilt",p:35,type:"treat"},
    {id:"t2",n:"Movie / match night",d:"Guilt-free evening off",p:28,type:"treat"},
    {id:"t3",n:"Lazy morning pass",d:"No alarm, no plan",p:18,type:"treat"},
    {id:"t4",n:"The fancy coffee",d:"The one you always skip",p:12,type:"treat"},
+   {id:"mo1",n:"10-min meditation break",d:"Reset the mind, come back sharper",p:8,type:"boost"},
+   {id:"mo2",n:"Power-nap pass (20 min)",d:"Earned rest — then push",p:14,type:"boost"},
+   {id:"mo3",n:"Favourite song, full volume",d:"Dance it out, then get back in",p:6,type:"boost"},
+   {id:"mo4",n:"Sunset / nature walk",d:"Screens off, look up, breathe",p:12,type:"boost"},
+   {id:"mo5",n:"One inspiring talk or video",d:"Fuel for the next sprint",p:10,type:"boost"},
+   {id:"mo6",n:"Call someone who lifts you",d:"15 minutes with your person",p:14,type:"boost"},
+   {id:"mo7",n:"A new book for the shelf",d:"Invest the win back into you",p:60,type:"boost"},
+   {id:"mo8",n:"Fresh playlist / new album",d:"Soundtrack for the grind ahead",p:16,type:"boost"},
+   {id:"mo9",n:"Long hot shower + podcast",d:"Decompress, plan tomorrow",p:8,type:"boost"},
+   {id:"mo10",n:"Guilt-free gaming hour",d:"You earned the escape",p:22,type:"boost"},
    {id:"sk",n:"Extra skip token",d:"One more excused quest this week",p:45,type:"token"}];
   (O.treats||[]).forEach((t,i)=>{if(t)s.push({id:"ct"+i,n:t,d:"Your pick",p:30,type:"treat"});});
   return s;
@@ -600,7 +718,7 @@ async function pushSync(){
   setDot(false);
   try{
     const L=lvlOf(totalXP());
-    await sb.from("saves").upsert({id:session.user.id,onboarding:S.onboarding,roadmap:S.roadmap,state:{tasks:S.tasks,skips:S.skips,extraSkip:S.extraSkip,miles:S.miles,habits:S.habits,spent:S.spent,purch:S.purch,log:S.log,seenGifts:S.seenGifts,follows:S.follows}});
+    await sb.from("saves").upsert({id:session.user.id,onboarding:S.onboarding,roadmap:S.roadmap,state:{tasks:S.tasks,skips:S.skips,extraSkip:S.extraSkip,miles:S.miles,habits:S.habits,spent:S.spent,purch:S.purch,log:S.log,seenGifts:S.seenGifts,follows:S.follows,notes:S.notes}});
     await sb.from("profiles").update({xp:totalXP(),pts:pts(),level:L.l,week_xp:curW?weekXP(curW):0,chain:dayChain(),season_week:curW?wk(curW).n:1}).eq("id",session.user.id);
     setDot(true);
   }catch(e){setDot(false);}
@@ -629,21 +747,37 @@ async function refreshGiftNet(){
 function setDot(ok){const d=document.getElementById("syncdot");d.classList.toggle("on",!!ok);}
 
 /* ═════════ AUTH FLOW ═════════ */
-let authEmail="";
+let authMode="signup"; // or "signin"
 function show(id){document.querySelectorAll(".full").forEach(f=>f.classList.remove("on"));if(id)document.getElementById(id).classList.add("on");}
-function showAuth(){if(!initSB()){toast("Multiplayer backend not configured yet — starting solo.");startNew();return;}document.getElementById("otpfield").style.display="none";document.getElementById("authbtn").textContent="Email me a sign-in link";show("f-auth");}
+function setAuthMode(m){
+  authMode=m;
+  el("authtitle").textContent=m==="signup"?"Create your account":"Welcome back";
+  el("authsub").textContent=m==="signup"?"Pick an email and password. That's your login — nothing to verify, nothing to lose.":"Sign in with your email and password.";
+  el("authbtn").textContent=m==="signup"?"Create account":"Sign in";
+  el("authtoggle").textContent=m==="signup"?"Already have an account? Sign in":"New here? Create an account";
+  el("pass").setAttribute("autocomplete",m==="signup"?"new-password":"current-password");
+}
+function toggleAuthMode(){setAuthMode(authMode==="signup"?"signin":"signup");}
+function showAuth(mode){if(!initSB()){toast("Backend not configured — starting solo.");startNew();return;}setAuthMode(mode||"signin");show("f-auth");}
 async function authNext(){
-  const btn=document.getElementById("authbtn");
-  authEmail=document.getElementById("email").value.trim();
-  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(authEmail)){toast("That email doesn't look right.");return;}
-  btn.disabled=true;btn.textContent="Sending…";
-  const {error}=await sb.auth.signInWithOtp({email:authEmail,options:{shouldCreateUser:true,emailRedirectTo:location.origin+location.pathname}});
-  btn.disabled=false;btn.textContent="Email me a sign-in link";
-  if(error){toast(error.message);return;}
-  document.getElementById("emailfield").style.display="none";
-  document.getElementById("authsent").style.display="block";
-  document.getElementById("sentto").textContent=authEmail;
-  btn.style.display="none";
+  const btn=el("authbtn");
+  const email=el("email").value.trim(), pass=el("pass").value;
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){toast("That email doesn't look right.");return;}
+  if(!pass||pass.length<6){toast("Password needs at least 6 characters.");return;}
+  btn.disabled=true;btn.textContent=authMode==="signup"?"Creating…":"Signing in…";
+  let res;
+  if(authMode==="signup") res=await sb.auth.signUp({email,password:pass});
+  else res=await sb.auth.signInWithPassword({email,password:pass});
+  btn.disabled=false;setAuthMode(authMode);
+  if(res.error){
+    const m=res.error.message||"";
+    if(/already registered|already exists/i.test(m)){toast("That email already has an account — switching to sign in.");setAuthMode("signin");return;}
+    if(/invalid login|invalid credentials/i.test(m)){toast("Wrong email or password.");return;}
+    toast(m);return;
+  }
+  if(!res.data.session){ toast("Account made — now sign in.");setAuthMode("signin");return; }
+  session=res.data.session;
+  routed=false; await routeAfterAuth();
 }
 function genCode(){const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789";let c="";for(let i=0;i<4;i++)c+=A[Math.floor(Math.random()*A.length)];return "GTM-"+c;}
 async function createProfile(){
@@ -665,18 +799,18 @@ async function createProfile(){
   save();enterWizard();
 }
 function startNew(){
-  if(initSB()){show("f-auth");authStage=0;document.getElementById("otpfield").style.display="none";document.getElementById("authbtn").textContent="Send code";}
+  if(initSB()){showAuth("signup");}
   else{if(!S.profile)show("f-handle");else if(!S.roadmap)enterWizard();else enterApp();}
 }
 async function signOut(){if(sb&&session){await sb.auth.signOut();}localStorage.removeItem(KEY);location.reload();}
 
 /* ═════════ WIZARD ═════════ */
 const W={step:0,O:{arenas:[],purchases:[{name:"",price:""},{name:"",price:""},{name:"",price:""}],treats:["",""]}};
-const WSTEPS=["arenas","trend","career","fitness","health","money","business","hobby","study","buys","time"];
+const WSTEPS=["arenas","trend","career","fitness","health","money","business","hobby","study","buys","time","ai"];
 function activeSteps(){
   const a=W.O.arenas;
   return WSTEPS.filter(s=>{
-    if(["arenas","trend","buys","time"].includes(s))return true;
+    if(["arenas","trend","buys","time","ai"].includes(s))return true;
     return a.includes(s);
   });
 }
@@ -728,6 +862,10 @@ function drawWiz(){
       <div class="chp ${O.hours==="light"?"on":""}" data-h="light">~4 hrs/week · gentle</div>
       <div class="chp ${O.hours==="mid"||!O.hours?"on":""}" data-h="mid">~7 hrs/week · solid</div>
       <div class="chp ${O.hours==="high"?"on":""}" data-h="high">10+ hrs/week · aggressive</div></div>`;
+  if(cur==="ai")b.innerHTML=`<h2>Let AI design it?</h2>
+    <div class="p">Optional. Paste a free Google Gemini key and an AI coach writes your quests, daily goals and timeline — tuned to everything you just told me. Skip it and a smart built-in planner does the job instantly. Either way you can change it later.</div>
+    <div class="field"><label>Gemini API key (optional)</label><input id="w_ai" type="password" placeholder="AIza…" value="${aiKey()}"></div>
+    <div class="note">🔒 Stored only on this device, sent only to Google — never to us. Get a free key in 2 minutes at <b>aistudio.google.com/apikey</b> (free tier, no card).</div>`;
   bindWiz(cur);
   window.scrollTo({top:0});
 }
@@ -764,15 +902,26 @@ function captureWiz(){
   document.querySelectorAll("[data-bn]").forEach(e=>O.purchases[e.dataset.bn].name=e.value.trim());
   document.querySelectorAll("[data-bp]").forEach(e=>O.purchases[e.dataset.bp].price=Number(e.value.replace(/[^0-9]/g,"")));
   if(g("w_t0")!==undefined)O.treats=[g("w_t0"),g("w_t1")];
+  if(g("w_ai")!==undefined)setAiKey(g("w_ai"));
 }
-function wizNext(){
+async function wizNext(){
   captureWiz();
   const steps=activeSteps();
   if(steps[W.step]==="arenas"&&W.O.arenas.length===0){toast("Pick at least one arena.");return;}
   if(W.step<steps.length-1){W.step++;drawWiz();return;}
   if(!W.O.hours)W.O.hours="mid";
-  S.onboarding=W.O;S.roadmap=genRoadmap(W.O);save();
-  enterApp();toast("Season built. Week 1 starts Monday — warm-up counts now.");
+  S.onboarding=W.O;
+  const btn=document.getElementById("wnext");
+  if(aiKey()){
+    btn.disabled=true;btn.textContent="Designing your season with AI…";
+    S.roadmap=await genRoadmapAI(W.O);
+    btn.disabled=false;
+    toast(S.roadmap.byAI?"AI built your personalized season ✨":"AI was busy — used the smart plan. You can regenerate anytime.");
+  } else {
+    S.roadmap=genRoadmap(W.O);
+    toast("Season built. Week 1 starts Monday — warm-up counts now.");
+  }
+  save();enterApp();
 }
 function wizBack(){if(W.step>0){captureWiz();W.step--;drawWiz();}}
 function regen(){if(confirm("Rebuild your season from fresh answers? Progress on old quests is kept in XP but the plan changes.")){W.step=0;W.O=Object.assign({arenas:[],purchases:[{name:"",price:""}],treats:["",""]},S.onboarding||{});enterWizard();}}
@@ -784,7 +933,7 @@ function enterApp(){
   curW=pickWeek();render();
   if(session){pushSync();pollGifts();}
 }
-function render(){renderToday();renderQuests();renderMiles();renderShop();renderYou();renderFriends();syncHeader();syncRing();}
+function render(){renderToday();renderQuests();renderMiles();renderShop();renderYou();renderFriends();renderNotes();syncHeader();syncRing();}
 function syncHeader(){
   const xp=totalXP(),{l}=lvlOf(xp);
   el("hlvl").textContent=l;el("hpts").textContent=pts();
@@ -900,7 +1049,28 @@ function syncMileBars(){
     if(!b)return;const pr=mileProg(m),done=!!S.miles[m.id];
     b.style.width=(pr/m.goal*100)+"%";p.textContent=done?"Done":Math.round(pr/m.goal*100)+"%";});
 }
+function estMonth(m){ // estimated completion date for a milestone, from progress pace or its due
+  const p=mileProg(m); if(S.miles[m.id])return "Done";
+  if(m.due)return new Date(m.due+"T12:00:00").toLocaleDateString("en-IN",{month:"short",year:"2-digit"});
+  return "";
+}
+function renderTimeline(){
+  const tl=el("timeline");if(!tl)return;
+  const wks=R().weeks, endD=new Date(wks[wks.length-1].end+"T12:00:00");
+  el("tl-end").textContent="season ends "+endD.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"2-digit"});
+  const items=[];
+  R().miles.forEach(m=>{ const p=mileProg(m),pct=Math.round(p/m.goal*100);
+    items.push({t:m.n,s:S.miles[m.id]?"Completed":pct+"% there — on track",w:estMonth(m),done:!!S.miles[m.id],d:m.due||"2100"}); });
+  R().ladder.forEach(l=>{ items.push({t:l.t.split(" · ")[0],s:S.purch["lad_"+l.id]?"Bought in cash":"Saving toward it",w:l.w,done:!!S.purch["lad_"+l.id],d:"z"+l.w}); });
+  items.sort((a,b)=>String(a.d).localeCompare(String(b.d)));
+  tl.innerHTML="";
+  items.forEach(it=>{ const r=document.createElement("div");r.className="tlrow"+(it.done?" done":"");
+    r.innerHTML=`<div class="tldot ${it.done?"done":""}"></div><div class="tm"><div class="tt">${it.t}</div><div class="ts">${it.s}</div></div><div class="tw">${it.w||""}</div>`;
+    tl.appendChild(r); });
+  if(!items.length)tl.innerHTML=`<div class="note">Your goals and their estimated dates appear here.</div>`;
+}
 function renderMiles(){
+  renderTimeline();
   const mc=el("milecards");mc.innerHTML="";
   const card=document.createElement("div");card.className="card";
   card.innerHTML=`<div class="cardtitle">This season</div>`;
@@ -976,6 +1146,48 @@ function renderYou(){
     j.appendChild(r);});
   el("sndbtn").textContent="Sound: "+(S.sound?"on":"off");
   el("authstate").textContent=session?"Sign out":"Solo mode — sign in to go social";
+}
+
+/* ═════════ NOTES ═════════ */
+let noteDate=todayISO();
+const ENERGY=["","🪫","🔋","⚡"];
+function renderNotes(){
+  const d=new Date(noteDate+"T12:00:00"), today=todayISO();
+  el("noteday").textContent = noteDate===today?"Today":noteDate===iso(new Date(Date.now()-864e5))?"Yesterday":d.toLocaleDateString("en-IN",{weekday:"long"});
+  el("notefull").textContent=d.toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"});
+  el("nnext").disabled = noteDate>=today;
+  const entry=S.notes[noteDate]||{text:"",energy:0};
+  el("notetext").value=entry.text||"";
+  document.querySelectorAll(".ec").forEach(b=>b.classList.toggle("on",Number(b.dataset.e)===entry.energy));
+  // recent
+  const rec=Object.keys(S.notes).filter(k=>(S.notes[k].text||S.notes[k].energy)).sort().reverse().slice(0,14);
+  const box=el("noterecent");
+  box.innerHTML=rec.length?"":`<div class="note">Nothing yet. Write your first entry above — even one line counts.</div>`;
+  rec.forEach(k=>{
+    const e=S.notes[k], dd=new Date(k+"T12:00:00");
+    const r=document.createElement("div");r.className="nrow";
+    r.innerHTML=`<div class="nemoji">${ENERGY[e.energy||0]||"📝"}</div>
+      <div class="nm"><div class="nt">${dd.toLocaleDateString("en-IN",{day:"numeric",month:"short"})}${k===today?" · today":""}</div>
+      <div class="np">${(e.text||"").replace(/\n/g," ").slice(0,60)||"(energy only)"}</div></div>`;
+    r.onclick=()=>{noteDate=k;renderNotes();gotoScreen("notes");};
+    box.appendChild(r);
+  });
+}
+function noteShift(dir){
+  const d=new Date(noteDate+"T12:00:00");d.setDate(d.getDate()+dir);
+  const ni=iso(d); if(ni>todayISO())return;
+  noteDate=ni;renderNotes();
+}
+function saveNote(){
+  const t=el("notetext").value;
+  const cur=S.notes[noteDate]||{text:"",energy:0};
+  cur.text=t; S.notes[noteDate]=cur; save();
+  el("notesaved").textContent="Saved ✓ "+new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"});
+}
+function setEnergy(v){
+  const cur=S.notes[noteDate]||{text:el("notetext").value,energy:0};
+  cur.energy=cur.energy===v?0:v; S.notes[noteDate]=cur; save();
+  document.querySelectorAll(".ec").forEach(b=>b.classList.toggle("on",Number(b.dataset.e)===cur.energy));
 }
 
 /* ═════════ FRIENDS ═════════ */
@@ -1131,16 +1343,21 @@ function tick(){
 }
 
 /* ═════════ NAV / BOOT ═════════ */
-document.querySelectorAll("nav button").forEach(b=>{
-  b.onclick=()=>{
-    document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));
-    document.querySelectorAll(".screen").forEach(x=>x.classList.remove("on"));
-    b.classList.add("on");el("s-"+b.dataset.s).classList.add("on");
-    scrollTo({top:0});sfx("tap");
-    if(b.dataset.s==="today")syncRing();
-    if(b.dataset.s==="friends")renderFriends();
-  };
-});
+function gotoScreen(s){
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x.dataset.s===s));
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("on"));
+  el("s-"+s).classList.add("on");
+  scrollTo({top:0});
+  if(s==="today")syncRing();
+  if(s==="friends")renderFriends();
+  if(s==="notes")renderNotes();
+}
+document.querySelectorAll("nav button").forEach(b=>{ b.onclick=()=>{sfx("tap");gotoScreen(b.dataset.s);}; });
+// notes autosave + energy
+(function(){
+  const tx=el("notetext"); if(tx){ let t=null; tx.addEventListener("input",()=>{clearTimeout(t);t=setTimeout(saveNote,500);}); }
+  document.querySelectorAll(".ec").forEach(b=>b.onclick=()=>setEnergy(Number(b.dataset.e)));
+})();
 let routed=false;
 async function routeAfterAuth(){
   if(routed)return; routed=true;
